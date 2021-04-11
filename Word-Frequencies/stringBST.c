@@ -25,18 +25,17 @@ node* newNode(char* word){
     newNode->word = word;
     newNode->leftChild = NULL;
     newNode->rightChild = NULL;
-    printf("new node %s\n", word);
     return newNode;
 }
 
 node* insert(node* root, char* word){
-    int comp = strcmp(word, root->word);
     if(root == NULL)
         return newNode(word);
-    else if(comp < 0)
+    else if(strcmp(word, root->word) < 0)
         root->leftChild = insert(root->leftChild, word);
     else
         root->rightChild = insert(root->rightChild, word);
+    
 }
 
 void printTree(node* root){
@@ -49,10 +48,8 @@ void printTree(node* root){
 
 int main(int argc, char* argv[]){
     node* root = newNode("a");
-    printf("%s\n", root->word);
-    //printTree(root);
-    insert(root, "b");
-    /*
+    
+    insert(root, "j");
     insert(root, "c");
     insert(root, "b");
     insert(root, "g");
@@ -60,5 +57,4 @@ int main(int argc, char* argv[]){
     insert(root, "d");
     insert(root, "f");
     printTree(root);
-    */
 }
