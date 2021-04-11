@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "stringBST.c"
 #include "strbuf.c"
+#include <math.h>
 
 #ifndef DEBUG
 #define DEBUG 1
@@ -46,10 +47,11 @@ int main(int argc, char* argv[]){
             }
         }
         else{
-            sb_append(&word, c);
+            sb_append(&word, tolower(c));
         }
     }
     printTree(root);
     if(DEBUG) printf("\nNode count: %d\n", nodeCount);
     setFrequency(root, nodeCount);
+    printf("%f\n", findWord(root, "hi")->frequency);
 }
