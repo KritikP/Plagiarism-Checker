@@ -11,27 +11,31 @@
 #include "stringBST.c"
 #include "strbuf.c"
 
+
 int main(int argc, char* argv[]){
     FILE *fp = fopen("text.txt", "r");
-    
-    strbuf_t word;
-    sb_init(&word, 8);
+    node* root;
+    strbuf_t* word;
+    sb_init(word, 8);
     char c;
     while(1){
         c = fgetc(fp);
         if(c == EOF){
             break;
         }
+        else if(c == ' '){
+            printList(word);
+            insert(root,word->data);
+            sb_destroy(word);
+            sb_init(word,8);
+        }
         else if((isalpha(c) == 0)){
             continue;
         }
-        else if(c == ' '){
-            word->data
-        }
         else{
-            sb_append(&word, c);
+            sb_append(word, c);
         }
     }
-    printList(&word);
+    printTree(root);
 }
 

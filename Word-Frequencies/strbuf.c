@@ -3,7 +3,7 @@
 #include "strbuf.h"
 
 #ifndef DEBUG
-#define DEBUG 1
+#define DEBUG 0
 #endif
 
 int sb_init(strbuf_t *L, size_t length)
