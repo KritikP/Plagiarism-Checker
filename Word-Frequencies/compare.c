@@ -22,10 +22,17 @@ int main(int argc, char* argv[]){
     while(1){
         c = fgetc(fp);
         if(c == EOF){
-            break;
+            if(word.used != 1){
+                char* temp = malloc(word.used);
+                strcpy(temp,word.data);
+                root = insert(root, temp);
+                nodeCount++;
+                sb_destroy(&word);
+                break;
+            }
         }
         else if(isalpha(c) == 0){
-            if(c == ' '){
+            if(c == ' ' && word.used != 1){
                 char* temp = malloc(word.used);
                 strcpy(temp,word.data);
                 //printf("%s\n",temp );
