@@ -39,7 +39,6 @@ int main(int argc, char* argv[]){
                 root = insert(root, temp);
                 nodeCount++;
                 sb_destroy(&word);
-                printf("%s\n", temp);
                 sb_init(&word, 8);
             }
         }
@@ -48,6 +47,6 @@ int main(int argc, char* argv[]){
         }
     }
     printTree(root);
-    printf(" %d\n",nodeCount);
+    printf("\nNode count: %d\n",nodeCount);
 }
 
