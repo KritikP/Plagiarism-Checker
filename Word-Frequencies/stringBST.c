@@ -4,16 +4,16 @@
 
 typedef struct node{
     int count;
+    int occurrence;
     char* word;
     struct node* leftChild;
     struct node* rightChild;
 } node;
 
 node* findWord(node* root, char* word){
-    int comp = strcmp(word, root->word);
-    if(root == NULL || comp == 0)
+    if(root == NULL || strcmp(word, root->word) == 0)
         return root;
-    else if(comp < 0)                   //If the search word is less than the current node, continue search left
+    else if(strcmp(word, root->word) < 0)                   //If the search word is less than the current node, continue search left
         findWord(root->leftChild, word);
     else                                //If the search word is greater than the current node, continue search right
         findWord(root->rightChild, word);
@@ -31,11 +31,12 @@ node* newNode(char* word){
 node* insert(node* root, char* word){
     if(root == NULL)
         return newNode(word);
-    else if(strcmp(word, root->word) < 0)
+    else if(strcmp(word, root->word) < 0){
         root->leftChild = insert(root->leftChild, word);
-    else
+    }
+    else{
         root->rightChild = insert(root->rightChild, word);
-    
+    }
 }
 
 void printTree(node* root){
@@ -47,6 +48,7 @@ void printTree(node* root){
 }
 
 int main(int argc, char* argv[]){
+    /*
     node* root = newNode("a");
     
     insert(root, "j");
@@ -57,4 +59,5 @@ int main(int argc, char* argv[]){
     insert(root, "d");
     insert(root, "f");
     printTree(root);
+    */
 }
