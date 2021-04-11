@@ -31,9 +31,8 @@ node* newNode(char* word){
 node* insert(node* root, char* word){
     if(root == NULL)
         return newNode(word);
-    else if(strcmp(word, root->word) == 0){
+    else if(strcmp(word, root->word) == 0){     //If the word already exists, just increase the count by one
         root->count++;
-        return NULL;
     }
     else if(strcmp(word, root->word) < 0){
         root->leftChild = insert(root->leftChild, word);
@@ -41,6 +40,7 @@ node* insert(node* root, char* word){
     else{
         root->rightChild = insert(root->rightChild, word);
     }
+    return root;
 }
 
 void printTree(node* root){
