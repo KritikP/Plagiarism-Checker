@@ -31,6 +31,10 @@ node* newNode(char* word){
 node* insert(node* root, char* word){
     if(root == NULL)
         return newNode(word);
+    else if(strcmp(word, root->word) == 0){
+        root->count++;
+        return NULL;
+    }
     else if(strcmp(word, root->word) < 0){
         root->leftChild = insert(root->leftChild, word);
     }
