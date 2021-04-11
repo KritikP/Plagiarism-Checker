@@ -47,6 +47,5 @@ int main(int argc, char* argv[]){
         }
     }
     printTree(root);
-    printf("\nNode count: %d\n",nodeCount);
+    printf("\nNode count: %d\n", nodeCount);
 }
-
