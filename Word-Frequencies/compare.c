@@ -14,28 +14,33 @@
 
 int main(int argc, char* argv[]){
     FILE *fp = fopen("text.txt", "r");
-    node* root;
-    strbuf_t* word;
-    sb_init(word, 8);
+    node* root = NULL;
+    int nodeCount = 0;
+    strbuf_t word;
+    sb_init(&word, 8);
     char c;
     while(1){
         c = fgetc(fp);
         if(c == EOF){
             break;
         }
-        else if(c == ' '){
-            printList(word);
-            insert(root,word->data);
-            sb_destroy(word);
-            sb_init(word,8);
-        }
-        else if((isalpha(c) == 0)){
-            continue;
+        else if(isalpha(c) == 0){
+            if(c == ' '){
+                char* temp = malloc(word.used);
+                strcpy(temp,word.data);
+                //printf("%s\n",temp );
+                root = insert(root,temp);
+                nodeCount++;
+                sb_destroy(&word);
+                printf("%s\n",temp);
+                sb_init(&word,8);
+            }
         }
         else{
-            sb_append(word, c);
+            sb_append(&word, c);
         }
     }
     printTree(root);
+    printf(" %d\n",nodeCount);
 }
 

@@ -22,6 +22,7 @@ node* findWord(node* root, char* word){
 node* newNode(char* word){
     node* newNode;
     newNode = malloc(sizeof(node));
+   // newNode->word = malloc(sizeof(strlen(word)));
     newNode->word = word;
     newNode->leftChild = NULL;
     newNode->rightChild = NULL;
@@ -50,3 +51,4 @@ void printTree(node* root){
         printTree(root->rightChild);
     }
 }
+
