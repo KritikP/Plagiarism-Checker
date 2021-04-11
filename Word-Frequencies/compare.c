@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
         if(c == EOF){
             if(word.used != 1){
                 char* temp = malloc(word.used);
-                strcpy(temp,word.data);
+                strcpy(temp, word.data);
                 root = insert(root, temp);
                 nodeCount++;
                 sb_destroy(&word);
@@ -34,13 +34,13 @@ int main(int argc, char* argv[]){
         else if(isalpha(c) == 0){
             if(c == ' ' && word.used != 1){
                 char* temp = malloc(word.used);
-                strcpy(temp,word.data);
+                strcpy(temp, word.data);
                 //printf("%s\n",temp );
-                root = insert(root,temp);
+                root = insert(root, temp);
                 nodeCount++;
                 sb_destroy(&word);
-                printf("%s\n",temp);
-                sb_init(&word,8);
+                printf("%s\n", temp);
+                sb_init(&word, 8);
             }
         }
         else{
