@@ -135,20 +135,3 @@ void printList(strbuf_t *list)
     putchar('\n');
     printf("String: %s\n", list->data);
 }
-
-int main(int argc, char argv[])
-{
-    char c;
-    strbuf_t A;
-    sb_init(&A, 8);
-    printList(&A);
-
-    sb_append(&A, 'a');
-    sb_append(&A, 'b');
-    sb_append(&A, 'c');
-    printList(&A);
-
-    sb_insert(&A, 4, 'd');
-    printList(&A);
-
-}

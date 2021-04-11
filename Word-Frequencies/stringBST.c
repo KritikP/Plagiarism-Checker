@@ -50,18 +50,3 @@ void printTree(node* root){
         printTree(root->rightChild);
     }
 }
-
-int main(int argc, char* argv[]){
-    /*
-    node* root = newNode("a");
-    
-    insert(root, "j");
-    insert(root, "c");
-    insert(root, "b");
-    insert(root, "g");
-    insert(root, "e");
-    insert(root, "d");
-    insert(root, "f");
-    printTree(root);
-    */
-}
