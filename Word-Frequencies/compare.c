@@ -11,6 +11,9 @@
 #include "stringBST.c"
 #include "strbuf.c"
 
+#ifndef DEBUG
+#define DEBUG 1
+#endif
 
 int main(int argc, char* argv[]){
     FILE *fp = fopen("text.txt", "r");
@@ -47,5 +50,6 @@ int main(int argc, char* argv[]){
         }
     }
     printTree(root);
-    printf("\nNode count: %d\n", nodeCount);
+    if(DEBUG) printf("\nNode count: %d\n", nodeCount);
+    setFrequency(root, nodeCount);
 }

@@ -4,7 +4,7 @@
 
 typedef struct node{
     int count;
-    int occurrence;
+    double frequency;
     char* word;
     struct node* leftChild;
     struct node* rightChild;
@@ -24,6 +24,7 @@ node* newNode(char* word){
     newNode = malloc(sizeof(node));
    // newNode->word = malloc(sizeof(strlen(word)));
     newNode->word = word;
+    newNode->count = 1;
     newNode->leftChild = NULL;
     newNode->rightChild = NULL;
     return newNode;
@@ -52,3 +53,12 @@ void printTree(node* root){
     }
 }
 
+void setFrequency(node* root, int total){
+    
+    if(root != NULL){
+        setFrequency(root->leftChild, total);
+        root->frequency = root->count / (double) total;
+        setFrequency(root->rightChild, total);
+    }
+    
+}
