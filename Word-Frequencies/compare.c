@@ -8,9 +8,9 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <stdbool.h>
+#include <math.h>
 #include "stringBST.c"
 #include "strbuf.c"
-#include <math.h>
 
 #ifndef DEBUG
 #define DEBUG 1
@@ -57,14 +57,42 @@ BST* readWords(FILE* fp){
     return tree;
 }
 
+float KLDHelper(node* root, BST* meanTree){
+    
+    if(root != NULL){
+        return root->frequency * log2f(root->frequency / findWord(meanTree, root->word)->frequency)
+        + KLDHelper(root->leftChild, meanTree) + KLDHelper(root->rightChild, meanTree);
+    }
+    else{
+        return 0;
+    }
+
+}
+
+float getKLD(BST* tree, BST* meanTree){
+    return KLDHelper(tree->root, meanTree);
+}
+
+float getJSD(BST* tree1, BST* tree2){
+    BST* meanTree = meanFrequencyTree(tree1, tree2);
+    return sqrt(0.5f * getKLD(tree1, meanTree) + 0.5f * getKLD(tree2, meanTree));
+}
+
 int main(int argc, char* argv[]){
     FILE *fp = fopen("text.txt", "r");
     BST* tree = readWords(fp);
-    printTree(tree);
-    if(DEBUG) printf("\nNode count: %d\n", tree->totalCount);
 
-    node* temp = findWord(tree, "hi");
+    FILE *fp2 = fopen("text2.txt", "r");
+    BST* tree2 = readWords(fp2);
+    printTree(tree);
     printf("\n");
+    printTree(tree2);
+    printf("\n");
+    //if(DEBUG) printf("\nNode count: %d\n", tree->totalCount);
+
+    printf("\n");
+    printf("JSD: %f\n", getJSD(tree, tree2));
+    //node* temp = findWord(tree, "hi");
     //printf("\n%f\n", findWord(tree, "hi")->frequency);
-    printf("Frequency of '%s': %f\n", temp->word, temp ? temp->frequency : 0);
+    //printf("Frequency of '%s': %f\n", temp->word, temp ? temp->frequency : 0);
 }
