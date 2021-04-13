@@ -35,8 +35,9 @@ int isDir(char *name){
     return EXIT_FAILURE;
 }
 
-BST* readWords(FILE* fp){
+BST* readWords(char* name){
     BST* tree = newBST();
+    FILE *fp = fopen(name, "r");
     strbuf_t word;
     sb_init(&word, 8);
     char c;
@@ -109,11 +110,9 @@ int main(int argc, char* argv[]){
         }
     }
 
-    FILE *fp = fopen("text.txt", "r");
-    BST* tree1 = readWords(fp);
-
-    FILE *fp2 = fopen("text2.txt", "r");
-    BST* tree2 = readWords(fp2);
+    
+    BST* tree1 = readWords("text1.txt");
+    BST* tree2 = readWords("text2.txt");
     printTree(tree1);
     printf("\n");
     printTree(tree2);
