@@ -94,7 +94,7 @@ void meanFrequencyTreeHelper(node* root1, node* root2, BST* tree){
     node* temp2;
     if(root1 != NULL){
         meanFrequencyTreeHelper(root1->leftChild, root2, tree);
-
+        meanFrequencyTreeHelper(root1->rightChild, root2, tree);
         temp = findWord(tree, root1->word);
         if(temp == NULL){                       //If the word isn't in the mean tree, add it and calculate the mean freq
             
@@ -108,8 +108,6 @@ void meanFrequencyTreeHelper(node* root1, node* root2, BST* tree){
             else
                 temp->frequency = 0.5f*(root1->frequency);
         }
-
-        meanFrequencyTreeHelper(root1->rightChild, root2, tree);
         
     }
     
