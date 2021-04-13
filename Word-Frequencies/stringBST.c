@@ -10,19 +10,9 @@ typedef struct node{
     struct node* rightChild;
 } node;
 
-node* findWord(node* root, char* word){
-    if(root == NULL || strcmp(word, root->word) == 0)
-        return root;
-    else if(strcmp(word, root->word) < 0)                   //If the search word is less than the current node, continue search left
-        findWord(root->leftChild, word);
-    else                                //If the search word is greater than the current node, continue search right
-        findWord(root->rightChild, word);
-}
-
 node* newNode(char* word){
     node* newNode;
     newNode = malloc(sizeof(node));
-   // newNode->word = malloc(sizeof(strlen(word)));
     newNode->word = word;
     newNode->count = 1;
     newNode->leftChild = NULL;
@@ -45,20 +35,55 @@ node* insert(node* root, char* word){
     return root;
 }
 
-void printTree(node* root){
+typedef struct BST{
+    int totalCount;
+    struct node* root;
+} BST;
+
+BST* newBST(){
+    BST* tree = malloc(sizeof(BST));
+    tree->root = NULL;
+    tree->totalCount = 0;
+    return tree;
+}
+
+void printTreeHelper(node* root){
     if(root != NULL){
-        printTree(root->leftChild);
+        printTreeHelper(root->leftChild);
         printf("%s ", root->word);
-        printTree(root->rightChild);
+        printTreeHelper(root->rightChild);
     }
 }
 
-void setFrequency(node* root, int total){
+void printTree(BST* tree){
+    printTreeHelper(tree->root);
+}
+
+void setFrequencyHelper(node* root, int total){
     
     if(root != NULL){
-        setFrequency(root->leftChild, total);
+        setFrequencyHelper(root->leftChild, total);
         root->frequency = root->count / (double) total;
-        setFrequency(root->rightChild, total);
+        setFrequencyHelper(root->rightChild, total);
     }
     
+}
+
+void setFrequency(BST* tree){
+    
+    setFrequencyHelper(tree->root, tree->totalCount);
+    
+}
+
+node* findWordHelper(node* root, char* word){
+    if(root == NULL || strcmp(word, root->word) == 0)
+        return root;
+    else if(strcmp(word, root->word) < 0)                   //If the search word is less than the current node, continue search left
+        findWordHelper(root->leftChild, word);
+    else                                //If the search word is greater than the current node, continue search right
+        findWordHelper(root->rightChild, word);
+}
+
+node* findWord(BST* tree, char* word){
+    return findWordHelper(tree->root, word);
 }

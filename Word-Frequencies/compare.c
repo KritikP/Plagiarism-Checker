@@ -16,32 +16,31 @@
 #define DEBUG 1
 #endif
 
-int main(int argc, char* argv[]){
-    FILE *fp = fopen("text.txt", "r");
-    node* root = NULL;
-    int nodeCount = 0;
+BST* readWords(FILE* fp){
+    BST* tree = newBST();
     strbuf_t word;
     sb_init(&word, 8);
     char c;
+    
     while(1){
         c = fgetc(fp);
         if(c == EOF){
             if(word.used != 1){
                 char* temp = malloc(word.used);
                 strcpy(temp, word.data);
-                root = insert(root, temp);
-                nodeCount++;
+                tree->root = insert(tree->root, temp);
+                tree->totalCount++;
                 sb_destroy(&word);
-                break;
             }
+            break;
         }
         else if(isalpha(c) == 0){
             if(c == ' ' && word.used != 1){
                 char* temp = malloc(word.used);
                 strcpy(temp, word.data);
                 //printf("%s\n",temp );
-                root = insert(root, temp);
-                nodeCount++;
+                tree->root = insert(tree->root, temp);
+                tree->totalCount++;
                 sb_destroy(&word);
                 sb_init(&word, 8);
             }
@@ -50,8 +49,22 @@ int main(int argc, char* argv[]){
             sb_append(&word, tolower(c));
         }
     }
-    printTree(root);
-    if(DEBUG) printf("\nNode count: %d\n", nodeCount);
-    setFrequency(root, nodeCount);
-    printf("%f\n", findWord(root, "hi")->frequency);
+    setFrequency(tree);
+    if(tree->root == NULL){
+        if(DEBUG) printf("Tree is empty\n");
+    }
+    
+    return tree;
+}
+
+int main(int argc, char* argv[]){
+    FILE *fp = fopen("text.txt", "r");
+    BST* tree = readWords(fp);
+    printTree(tree);
+    if(DEBUG) printf("\nNode count: %d\n", tree->totalCount);
+
+    node* temp = findWord(tree, "hi");
+    printf("\n");
+    //printf("\n%f\n", findWord(tree, "hi")->frequency);
+    printf("Frequency of '%s': %f\n", temp->word, temp ? temp->frequency : 0);
 }
