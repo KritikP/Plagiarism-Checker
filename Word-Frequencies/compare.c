@@ -120,14 +120,14 @@ int main(int argc, char* argv[]){
             dirNum = isDir(argv[i]);
             if(dirNum == 2){
                 //Is directory
-                //enqueue(&dirQueue, argv[i]);
+                enqueue(&dirQueue, argv[i]);
             }
             else if(dirNum == 3){
                 if(argv[i][0] == '.')
                     break;
                 
                 //Is valid file
-                //enqueue(&fileQueue, argv[i]);
+                enqueue(&fileQueue, argv[i]);
             }
         }
     }
@@ -135,9 +135,15 @@ int main(int argc, char* argv[]){
     if(!suffix){
         suffix = ".txt";
     }
-    int* dirThreadNums = malloc(sizeof(int) * directoryThreads);
-    *dirThreadNums = directoryThreads;
-    printf("Dir thread num: %d\n", *dirThreadNums);
+
+    int* dirActiveThreads = malloc(sizeof(int) * directoryThreads);
+    *dirActiveThreads = directoryThreads;
+
+    //Create and run directory threads
+    for(int i = 0; i < directoryThreads; i++){
+
+    }
+
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
 

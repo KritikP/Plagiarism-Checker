@@ -73,7 +73,7 @@ int enqueue(queue_t *Q, char* item)
 	return 0;
 }
 
-int dequeue(queue_t *Q, int *item)
+int dequeue(queue_t *Q)
 {
 	pthread_mutex_lock(&Q->lock);
 	
