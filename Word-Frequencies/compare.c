@@ -91,6 +91,7 @@ int main(int argc, char* argv[]){
     char* suffix = NULL;
     queue_t dirQueue;
     queue_t fileQueue;
+    pthread_t* tids;
 
     for(int i = 1; argv[i] != NULL; i++){
         if(argv[i][0] == '-'){
@@ -139,9 +140,8 @@ int main(int argc, char* argv[]){
     int* dirActiveThreads = malloc(sizeof(int) * directoryThreads);
     *dirActiveThreads = directoryThreads;
 
-    //Create and run directory threads
     for(int i = 0; i < directoryThreads; i++){
-
+        
     }
 
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
