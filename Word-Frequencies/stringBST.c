@@ -119,3 +119,24 @@ BST* meanFrequencyTree(BST* tree1, BST* tree2){
     meanFrequencyTreeHelper(tree2->root, tree1->root, tree);
     return tree;
 }
+
+double KLDHelper(node* root, BST* meanTree){
+    
+    if(root != NULL){
+        return root->frequency * log2f(root->frequency / findWord(meanTree, root->word)->frequency)
+        + KLDHelper(root->leftChild, meanTree) + KLDHelper(root->rightChild, meanTree);
+    }
+    else{
+        return 0;
+    }
+
+}
+
+double getKLD(BST* tree, BST* meanTree){
+    return KLDHelper(tree->root, meanTree);
+}
+
+double getJSD(BST* tree1, BST* tree2){
+    BST* meanTree = meanFrequencyTree(tree1, tree2);
+    return sqrt(0.5 * getKLD(tree1, meanTree) + 0.5 * getKLD(tree2, meanTree));
+}

@@ -5,13 +5,12 @@
 
 #ifndef QSIZE
 #define QSIZE 8
-
+#endif
 
 typedef struct{
     char* key;
     struct QNode* next;
 }QNode;
-
 
 typedef struct {
 	QNode *front, *rear;
@@ -51,14 +50,13 @@ int destroy(queue_t *Q)
 	return 0;
 }
 
-
 // add item to end of queue
 // if the queue is full, block until space becomes available
-int enqueue(queue_t *Q, int item)
+int enqueue(queue_t *Q, char* item)
 {
     pthread_mutex_lock(&Q->lock);
 	
-    QNode* temp = newNode(Q);
+    QNode* temp = newNode(item);
     if(Q->rear == NULL){
         Q->front = Q->rear = temp;
     }
@@ -74,7 +72,6 @@ int enqueue(queue_t *Q, int item)
 	
 	return 0;
 }
-
 
 int dequeue(queue_t *Q, int *item)
 {

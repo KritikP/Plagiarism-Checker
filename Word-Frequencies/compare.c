@@ -17,6 +17,11 @@
 #define DEBUG 1
 #endif
 
+int processDirs(int* dirThreadNums){
+
+    return (int)* dirThreadNums;
+}
+
 int isDir(char *name){
     struct stat data;
 
@@ -78,27 +83,6 @@ BST* readWords(char* name){
     return tree;
 }
 
-double KLDHelper(node* root, BST* meanTree){
-    
-    if(root != NULL){
-        return root->frequency * log2f(root->frequency / findWord(meanTree, root->word)->frequency)
-        + KLDHelper(root->leftChild, meanTree) + KLDHelper(root->rightChild, meanTree);
-    }
-    else{
-        return 0;
-    }
-
-}
-
-double getKLD(BST* tree, BST* meanTree){
-    return KLDHelper(tree->root, meanTree);
-}
-
-double getJSD(BST* tree1, BST* tree2){
-    BST* meanTree = meanFrequencyTree(tree1, tree2);
-    return sqrt(0.5 * getKLD(tree1, meanTree) + 0.5 * getKLD(tree2, meanTree));
-}
-
 int main(int argc, char* argv[]){
     int dirNum;
     int directoryThreads = 1;
@@ -136,12 +120,14 @@ int main(int argc, char* argv[]){
             dirNum = isDir(argv[i]);
             if(dirNum == 2){
                 //Is directory
+                //enqueue(&dirQueue, argv[i]);
             }
             else if(dirNum == 3){
                 if(argv[i][0] == '.')
                     break;
                 
                 //Is valid file
+                //enqueue(&fileQueue, argv[i]);
             }
         }
     }
@@ -149,6 +135,9 @@ int main(int argc, char* argv[]){
     if(!suffix){
         suffix = ".txt";
     }
+    int* dirThreadNums = malloc(sizeof(int) * directoryThreads);
+    *dirThreadNums = directoryThreads;
+    printf("Dir thread num: %d\n", *dirThreadNums);
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
 
