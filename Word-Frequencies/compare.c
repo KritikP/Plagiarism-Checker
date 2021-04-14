@@ -140,17 +140,10 @@ int main(int argc, char* argv[]){
     int* dirActiveThreads = malloc(sizeof(int) * directoryThreads);
     *dirActiveThreads = directoryThreads;
 
-<<<<<<< HEAD
     while(dequeue(&dirQueue) != NULL){
         char* dirName;
         dirName = malloc(sizeof(strlen(dequeue(&dirQueue))));
         dirName = dequeue(&dirQueue);
-=======
-    while(dequeue(dirQeue) != NULL){
-        char* dirName;
-        dirName = malloc(sizeof(stlen(dequeue(dirQueue))));
-        dirName = dequeue(dirQueue);
->>>>>>> b9bc337dc44e9b54df75d4fbea3ffbf449553303
         //open dir
         DIR *dir;
         struct dirent *dp;
@@ -161,21 +154,13 @@ int main(int argc, char* argv[]){
         }
         else{
             while((dp = readdir(dir)) != NULL){
-<<<<<<< HEAD
                 dirNum = isDir(dp->d_name);
-=======
-                dirNum = isDir(dp);
->>>>>>> b9bc337dc44e9b54df75d4fbea3ffbf449553303
                 if(dirNum == 2){
                 //Is directory
                 enqueue(&dirQueue, dp->d_name);
                 }
                 else if(dirNum == 3){
-<<<<<<< HEAD
                     if(dp->d_name[0] == '.')
-=======
-                    if(dirName == '.')
->>>>>>> b9bc337dc44e9b54df75d4fbea3ffbf449553303
                         break;
                     
                     //Is valid file
