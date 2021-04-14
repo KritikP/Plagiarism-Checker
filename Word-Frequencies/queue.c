@@ -103,11 +103,7 @@ char* dequeue(queue_t *Q)
     QNode* temp = Q->front;
 	
 	char* tempData;
-<<<<<<< HEAD
 	tempData = malloc(sizeof(strlen(temp->key)));
-=======
-	tempData = malloc(sizeOf(strlen(temp->key)));
->>>>>>> b9bc337dc44e9b54df75d4fbea3ffbf449553303
 	strcpy(tempData,temp->key);
 	Q->front = Q->front->next;
 	
