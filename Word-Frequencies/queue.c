@@ -51,7 +51,13 @@ int destroy(queue_t *Q)
 int qclose(queue_t *Q)
 {
 	pthread_mutex_lock(&Q->lock);
+<<<<<<< HEAD
 	pthread_cond_broadcast(&Q->read_ready);
+=======
+	Q->open = 0;
+	pthread_cond_broadcast(&Q->read_ready);
+	pthread_cond_broadcast(&Q->write_ready);
+>>>>>>> b9bc337dc44e9b54df75d4fbea3ffbf449553303
 	pthread_mutex_unlock(&Q->lock);	
 
 	return 0;
@@ -103,7 +109,11 @@ char* dequeue(queue_t *Q)
     QNode* temp = Q->front;
 	
 	char* tempData;
+<<<<<<< HEAD
 	tempData = malloc(sizeof(strlen(temp->key)));
+=======
+	tempData = malloc(sizeOf(strlen(temp->key)));
+>>>>>>> b9bc337dc44e9b54df75d4fbea3ffbf449553303
 	strcpy(tempData,temp->key);
 	Q->front = Q->front->next;
 	
