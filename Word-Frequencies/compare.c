@@ -140,8 +140,35 @@ int main(int argc, char* argv[]){
     int* dirActiveThreads = malloc(sizeof(int) * directoryThreads);
     *dirActiveThreads = directoryThreads;
 
-    for(int i = 0; i < directoryThreads; i++){
-        
+    while(dequeue(&dirQueue) != NULL){
+        char* dirName;
+        dirName = malloc(sizeof(strlen(dequeue(&dirQueue))));
+        dirName = dequeue(&dirQueue);
+        //open dir
+        DIR *dir;
+        struct dirent *dp;
+        dir = opendir(dirName);
+        if((dir == NULL)){
+            perror("Cannot open");
+            exit(1);
+        }
+        else{
+            while((dp = readdir(dir)) != NULL){
+                dirNum = isDir(dp->d_name);
+                if(dirNum == 2){
+                //Is directory
+                enqueue(&dirQueue, dp->d_name);
+                }
+                else if(dirNum == 3){
+                    if(dp->d_name[0] == '.')
+                        break;
+                    
+                    //Is valid file
+                    enqueue(&fileQueue, dp->d_name);
+                }
+            }
+        }
+
     }
 
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
