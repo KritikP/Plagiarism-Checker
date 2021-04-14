@@ -49,6 +49,16 @@ int destroy(queue_t *Q)
 
 	return 0;
 }
+int qclose(queue_t *Q)
+{
+	pthread_mutex_lock(&Q->lock);
+	Q->open = 0;
+	pthread_cond_broadcast(&Q->read_ready);
+	pthread_cond_broadcast(&Q->write_ready);
+	pthread_mutex_unlock(&Q->lock);	
+
+	return 0;
+}
 
 // add item to end of queue
 // if the queue is full, block until space becomes available
@@ -73,15 +83,31 @@ int enqueue(queue_t *Q, char* item)
 	return 0;
 }
 
-int dequeue(queue_t *Q)
+char* dequeue(queue_t *Q)
 {
 	pthread_mutex_lock(&Q->lock);
-	
-	while (Q->count == 0) {
-		pthread_cond_wait(&Q->read_ready, &Q->lock);
+	if(Q->count == 0){
+		Q->activeThreads--;
+		if(Q->activeThreads == 0){
+			pthread_mutex_unlock(&Q->lock);
+			pthread_cond_broadcast(&Q->read_ready);
+			return NULL;
+		}
+		while(Q->count == 0 && Q->activeThreads != 0){
+			pthread_cond_wait(&Q->read_ready, &Q->lock);
+		}
+		if(Q->count == 0){
+			pthread_mutex_unlock(&Q->lock);
+			return NULL;
+		}
+		Q->activeThreads++;
 	}
 
     QNode* temp = Q->front;
+	
+	char* tempData;
+	tempData = malloc(sizeOf(strlen(temp->key)));
+	strcpy(tempData,temp->key);
 	Q->front = Q->front->next;
 	
 	if(Q->front == NULL){
@@ -95,5 +121,5 @@ int dequeue(queue_t *Q)
 	
 	pthread_mutex_unlock(&Q->lock);
 	
-	return 0;
+	return tempData;
 }
