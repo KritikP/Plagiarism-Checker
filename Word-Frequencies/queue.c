@@ -13,7 +13,8 @@ typedef struct{
 }QNode;
 
 typedef struct {
-	QNode *front, *rear;
+	QNode *front;
+	QNode *rear;
 	unsigned count;
 	unsigned head;
 	pthread_mutex_t lock;
@@ -36,7 +37,6 @@ int init(queue_t *Q)
 	Q->head = 0;
 	pthread_mutex_init(&Q->lock, NULL);
 	pthread_cond_init(&Q->read_ready, NULL);
-	//pthread_cond_init(&Q->write_ready, NULL);
 	
 	return 0;
 }
