@@ -10,7 +10,7 @@ typedef struct node{
     struct node* rightChild;
 } node;
 
-node* newNode(char* word){
+node* newBSTNode(char* word){
     node* newNode;
     newNode = malloc(sizeof(node));
     newNode->word = word;
@@ -23,7 +23,7 @@ node* newNode(char* word){
 
 node* insert(node* root, char* word){
     if(root == NULL)
-        return newNode(word);
+        return newBSTNode(word);
     else if(strcmp(word, root->word) == 0){     //If the word already exists, just increase the count by one
         root->count++;
     }
@@ -103,10 +103,10 @@ void meanFrequencyTreeHelper(node* root1, node* root2, BST* tree){
 
             temp2 = findWordHelper(root2, root1->word);      //Try to get the word in tree 2
             if(temp2 != NULL){                              //If the word is in tree 2
-                temp->frequency = 0.5f*(root1->frequency + temp2->frequency);
+                temp->frequency = 0.5*(root1->frequency + temp2->frequency);
             }
             else
-                temp->frequency = 0.5f*(root1->frequency);
+                temp->frequency = 0.5*(root1->frequency);
         }
         
     }

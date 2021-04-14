@@ -11,6 +11,7 @@
 #include <math.h>
 #include "stringBST.c"
 #include "strbuf.c"
+#include "queue.c"
 
 #ifndef DEBUG
 #define DEBUG 1
@@ -77,7 +78,7 @@ BST* readWords(char* name){
     return tree;
 }
 
-float KLDHelper(node* root, BST* meanTree){
+double KLDHelper(node* root, BST* meanTree){
     
     if(root != NULL){
         return root->frequency * log2f(root->frequency / findWord(meanTree, root->word)->frequency)
@@ -89,30 +90,71 @@ float KLDHelper(node* root, BST* meanTree){
 
 }
 
-float getKLD(BST* tree, BST* meanTree){
+double getKLD(BST* tree, BST* meanTree){
     return KLDHelper(tree->root, meanTree);
 }
 
-float getJSD(BST* tree1, BST* tree2){
+double getJSD(BST* tree1, BST* tree2){
     BST* meanTree = meanFrequencyTree(tree1, tree2);
-    return sqrt(0.5f * getKLD(tree1, meanTree) + 0.5f * getKLD(tree2, meanTree));
+    return sqrt(0.5 * getKLD(tree1, meanTree) + 0.5 * getKLD(tree2, meanTree));
 }
 
 int main(int argc, char* argv[]){
     int dirNum;
+    int directoryThreads = 1;
+    int fileThreads = 1;
+    int analysisThreads = 1;
+    char* suffix = NULL;
+    queue_t dirQueue;
+    queue_t fileQueue;
+
     for(int i = 1; argv[i] != NULL; i++){
-        dirNum = isDir(argv[i]);
-        if(dirNum == 2){
-            //Is directory
+        if(argv[i][0] == '-'){
+            char* temp = malloc(strlen(argv[i]) - 1 * sizeof(char));
+            for(int j = 2; j < strlen(argv[i]); j++){
+                temp[j - 2] = argv[i][j];
+            }
+            switch((argv[i][1])){
+                case ('d') :
+                    directoryThreads = atoi(temp);
+                    break;
+                case('f') :
+                    fileThreads = atoi(temp);
+                    break;
+                case('a') :
+                    analysisThreads = atoi(temp);
+                    break;
+                case('s') :
+                    suffix = malloc(strlen(temp) * sizeof(char));
+                    strcpy(suffix, temp);
+                    break;
+            }
+            free(temp);
+            
         }
-        else if(dirNum == 3){
-            //Is file
+        else{
+            dirNum = isDir(argv[i]);
+            if(dirNum == 2){
+                //Is directory
+            }
+            else if(dirNum == 3){
+                if(argv[i][0] == '.')
+                    break;
+                
+                //Is valid file
+            }
         }
     }
 
-    
-    BST* tree1 = readWords("text1.txt");
+    if(!suffix){
+        suffix = ".txt";
+    }
+    printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
+    directoryThreads, fileThreads, analysisThreads, suffix);
+
+    BST* tree1 = readWords("text.txt");
     BST* tree2 = readWords("text2.txt");
+    
     printTree(tree1);
     printf("\n");
     printTree(tree2);
@@ -124,4 +166,6 @@ int main(int argc, char* argv[]){
     //node* temp = findWord(tree, "hi");
     //printf("\n%f\n", findWord(tree, "hi")->frequency);
     //printf("Frequency of '%s': %f\n", temp->word, temp ? temp->frequency : 0);
+    
+    
 }
