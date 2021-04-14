@@ -51,9 +51,7 @@ int destroy(queue_t *Q)
 int qclose(queue_t *Q)
 {
 	pthread_mutex_lock(&Q->lock);
-	Q->open = 0;
 	pthread_cond_broadcast(&Q->read_ready);
-	pthread_cond_broadcast(&Q->write_ready);
 	pthread_mutex_unlock(&Q->lock);	
 
 	return 0;
