@@ -51,7 +51,7 @@ void* processDirs(void* q){
     strbuf_t filePath;
 
     printf("Thread:\n");
-    
+
     while(queues->dirQueue->activeThreads != 0){
         if((dirName = dequeue(queues->dirQueue)) == NULL)
             continue;
@@ -87,9 +87,22 @@ void* processDirs(void* q){
                     enqueue(queues->dirQueue, filePath.data);
                 }
                 else if(dirNum == 3){
+
+                    bool validSuffix = true;
+                    int dpLength = strlen(dp->d_name);
+                    int suffixLength = strlen(queues->suffix);
+                    for(int i = dpLength - suffixLength; i < suffixLength; i++){
+                        if(!(dp->d_name[i] == queues->suffix[i - dpLength - suffixLength])){
+                            validSuffix = false;
+                            break;
+                        }
+                    }
+
                     //Is valid file
-                    printf("Inserting file path into fileQueue: '%s'\n", filePath.data);
-                    enqueue(queues->fileQueue, filePath.data);
+                    if(validSuffix){
+                        printf("Inserting file path into fileQueue: '%s'\n", filePath.data);
+                        enqueue(queues->fileQueue, filePath.data);
+                    }
                 }
                 sb_destroy(&filePath);
             }
