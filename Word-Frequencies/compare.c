@@ -91,8 +91,9 @@ void* processDirs(void* q){
                     bool validSuffix = true;
                     int dpLength = strlen(dp->d_name);
                     int suffixLength = strlen(queues->suffix);
-                    for(int i = dpLength - suffixLength; i < suffixLength; i++){
-                        if(!(dp->d_name[i] == queues->suffix[i - dpLength - suffixLength])){
+                    printf("dpLength and suffix length: %d, %d\n", dpLength, suffixLength);
+                    for(int i = 0; i < suffixLength; i++){
+                        if(queues->suffix[i] != dp->d_name[dpLength - suffixLength + i]){
                             validSuffix = false;
                             break;
                         }
@@ -235,7 +236,10 @@ int main(int argc, char* argv[]){
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
     
-    printf("File 1 and file 2: %s, %s\n", queues.fileQueue->front->key, queues.fileQueue->rear->key);
+    char* fileName;
+    while((fileName = dequeue(&fileQ)) != NULL){
+        printf("File %d: %s\n", fileQ.count, fileName);
+    }
 
     /*
     BST* tree1 = readWords("text.txt");
