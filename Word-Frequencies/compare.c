@@ -227,6 +227,7 @@ int main(int argc, char* argv[]){
     printf("Initial file queue count: %d\n", fileQ.count);
     setThreads(queues.dirQueue, directoryThreads);
     setThreads(queues.fileQueue, fileThreads);
+    
     if(!suffix){
         suffix = ".txt";
     }

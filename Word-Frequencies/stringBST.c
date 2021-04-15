@@ -129,7 +129,6 @@ double KLDHelper(node* root, BST* meanTree){
     else{
         return 0;
     }
-
 }
 
 double getKLD(BST* tree, BST* meanTree){

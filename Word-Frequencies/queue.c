@@ -79,7 +79,6 @@ int enqueue(queue_t *Q, char* item)
 	++Q->count;
 	
 	pthread_cond_signal(&Q->read_ready);
-
 	pthread_mutex_unlock(&Q->lock);
 	
 	return 0;
