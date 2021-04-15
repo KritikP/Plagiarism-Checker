@@ -9,6 +9,8 @@
 #include <dirent.h>
 #include <stdbool.h>
 #include <math.h>
+#include <pthread.h>
+
 #include "stringBST.c"
 #include "strbuf.c"
 #include "queue.c"
@@ -16,11 +18,6 @@
 #ifndef DEBUG
 #define DEBUG 1
 #endif
-
-int processDirs(int* dirThreadNums){
-
-    return (int)* dirThreadNums;
-}
 
 int isDir(char *name){
     struct stat data;
@@ -39,6 +36,61 @@ int isDir(char *name){
         return 3;
     
     return EXIT_FAILURE;
+}
+
+void* processDirs(void* queues){
+    queue_t** QList = (queue_t**) queues;
+    int dirNum;
+    char* dirName;
+    strbuf_t filePath;
+
+    printf("Thread:\n");
+    dirName = dequeue(QList[0]);
+    printf("dirName: '%s'\n", dirName);
+    dequeue(QList[0]);
+    /*
+    while((dirName = dequeue(QList[0])) != NULL){
+        printf("dirName: %s\n", dirName);
+        //open dir
+        DIR *dir;
+        struct dirent *dp;
+        dir = opendir(dirName);
+        
+        if((dir == NULL)){
+            perror("Cannot open");
+            exit(1);
+        }
+        else{
+            while((dp = readdir(dir)) != NULL){
+                sb_init(&filePath, 10);
+                printf("File in %s: '%s'\n", dirName, dp->d_name);
+                sb_concat(&filePath, dirName);
+                sb_append(&filePath, '/');
+                sb_concat(&filePath, dp->d_name);
+                
+                printf("File path: %s\n", filePath.data);
+                dirNum = isDir(filePath.data);
+                printf("dirNum: %d\n", dirNum);
+                if(dirNum == 2){
+                    if(dp->d_name[0] == '.')
+                        continue;
+                    //Is valid directory
+                    printf("Inserting directory path into dirQueue: '%s'\n", filePath.data);
+                    enqueue(QList[0], filePath.data);
+                }
+                else if(dirNum == 3){
+                    //Is valid file
+                    printf("Inserting file path into fileQueue: '%s'\n", filePath.data);
+                    enqueue(QList[1], filePath.data);
+                }
+                sb_destroy(&filePath);
+            }
+        }
+        printf("yeeyee\n\n\n");
+    }
+    */
+    printf("End thread\n");
+    return 0;
 }
 
 BST* readWords(char* name){
@@ -89,10 +141,14 @@ int main(int argc, char* argv[]){
     int fileThreads = 1;
     int analysisThreads = 1;
     char* suffix = NULL;
+    queue_t* queues[2];
     queue_t dirQueue;
     queue_t fileQueue;
-    pthread_t* tids;
+    queues[0] = &dirQueue;
+    queues[1] = &fileQueue;
 
+    init(queues[0]);
+    init(queues[1]);
     for(int i = 1; argv[i] != NULL; i++){
         if(argv[i][0] == '-'){
             char* temp = malloc(strlen(argv[i]) - 1 * sizeof(char));
@@ -121,59 +177,46 @@ int main(int argc, char* argv[]){
             dirNum = isDir(argv[i]);
             if(dirNum == 2){
                 //Is directory
-                enqueue(&dirQueue, argv[i]);
+                enqueue(queues[0], argv[i]);
             }
             else if(dirNum == 3){
                 if(argv[i][0] == '.')
                     break;
                 
                 //Is valid file
-                enqueue(&fileQueue, argv[i]);
+                enqueue(queues[1], argv[i]);
             }
         }
     }
-
+    
+    printf("Initial directory queue count: %d\n", dirQueue.count);
+    printf("Initial file queue count: %d\n", fileQueue.count);
+    setThreads(queues[0], directoryThreads);
+    setThreads(queues[1], fileThreads);
     if(!suffix){
         suffix = ".txt";
     }
-
     int* dirActiveThreads = malloc(sizeof(int) * directoryThreads);
     *dirActiveThreads = directoryThreads;
 
-    while(dequeue(&dirQueue) != NULL){
-        char* dirName;
-        dirName = malloc(sizeof(strlen(dequeue(&dirQueue))));
-        dirName = dequeue(&dirQueue);
-        //open dir
-        DIR *dir;
-        struct dirent *dp;
-        dir = opendir(dirName);
-        if((dir == NULL)){
-            perror("Cannot open");
-            exit(1);
-        }
-        else{
-            while((dp = readdir(dir)) != NULL){
-                dirNum = isDir(dp->d_name);
-                if(dirNum == 2){
-                //Is directory
-                enqueue(&dirQueue, dp->d_name);
-                }
-                else if(dirNum == 3){
-                    if(dp->d_name[0] == '.')
-                        break;
-                    
-                    //Is valid file
-                    enqueue(&fileQueue, dp->d_name);
-                }
-            }
-        }
-
+    pthread_t d_tids[directoryThreads];
+    pthread_t f_tids[fileThreads];
+    
+    //Start the directory threads
+    for(int i = 0; i < directoryThreads; i++){
+        pthread_create(&d_tids[i], NULL, processDirs, &queues);
     }
+
+    int* returnVal = 0;
+    for(int i = 0; i < directoryThreads; i++){
+        pthread_join(d_tids[i], NULL);
+        //printf("Return value of thread %ld: %d\n", d_tids[0], *returnVal);
+    }
+    printf("Post directory threads file queue count: %d\n", fileQueue.count);
 
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
-
+    
     BST* tree1 = readWords("text.txt");
     BST* tree2 = readWords("text2.txt");
     
@@ -185,9 +228,6 @@ int main(int argc, char* argv[]){
 
     printf("\n");
     printf("JSD: %f\n", getJSD(tree1, tree2));
-    //node* temp = findWord(tree, "hi");
-    //printf("\n%f\n", findWord(tree, "hi")->frequency);
-    //printf("Frequency of '%s': %f\n", temp->word, temp ? temp->frequency : 0);
     
     
 }

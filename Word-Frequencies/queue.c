@@ -7,12 +7,12 @@
 #define QSIZE 8
 #endif
 
-typedef struct{
+typedef struct QNode{
     char* key;
     struct QNode* next;
 }QNode;
 
-typedef struct {
+typedef struct queue_t{
 	QNode *front;
 	QNode *rear;
 	int activeThreads;
@@ -30,7 +30,7 @@ QNode* newNode(char* k){
 }
 
 int init(queue_t *Q)
-{   
+{
     Q->front = NULL;
     Q->rear = NULL;
 	Q->count = 0;
@@ -38,6 +38,10 @@ int init(queue_t *Q)
 	pthread_cond_init(&Q->read_ready, NULL);
 	
 	return 0;
+}
+
+int setThreads(queue_t *Q, int threads){
+	Q->activeThreads = threads;
 }
 
 int destroy(queue_t *Q)
@@ -74,7 +78,7 @@ int enqueue(queue_t *Q, char* item)
 	++Q->count;
 	
 	pthread_cond_signal(&Q->read_ready);
-	
+
 	pthread_mutex_unlock(&Q->lock);
 	
 	return 0;
@@ -83,6 +87,7 @@ int enqueue(queue_t *Q, char* item)
 char* dequeue(queue_t *Q)
 {
 	pthread_mutex_lock(&Q->lock);
+	
 	if(Q->count == 0){
 		Q->activeThreads--;
 		if(Q->activeThreads == 0){
@@ -90,9 +95,11 @@ char* dequeue(queue_t *Q)
 			pthread_cond_broadcast(&Q->read_ready);
 			return NULL;
 		}
+		
 		while(Q->count == 0 && Q->activeThreads != 0){
 			pthread_cond_wait(&Q->read_ready, &Q->lock);
 		}
+		
 		if(Q->count == 0){
 			pthread_mutex_unlock(&Q->lock);
 			return NULL;
@@ -104,7 +111,7 @@ char* dequeue(queue_t *Q)
 	
 	char* tempData;
 	tempData = malloc(sizeof(strlen(temp->key)));
-	strcpy(tempData,temp->key);
+	strcpy(tempData, temp->key);
 	Q->front = Q->front->next;
 	
 	if(Q->front == NULL){
@@ -117,6 +124,6 @@ char* dequeue(queue_t *Q)
 	//pthread_cond_signal(&Q->write_ready);
 	
 	pthread_mutex_unlock(&Q->lock);
-	
+
 	return tempData;
 }
