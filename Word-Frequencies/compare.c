@@ -27,6 +27,7 @@ typedef struct bstLL{
 typedef struct Queues_t{
     queue_t* dirQueue;
     queue_t* fileQueue;
+    bstLL* WFD;
     char* suffix;
 }Queues_t;
 
@@ -49,74 +50,13 @@ int isDir(char *name){
     return EXIT_FAILURE;
 }
 
-void* processDirs(void* q){
-    Queues_t* queues = (Queues_t*) q;
-    int dirNum;
-    char* dirName;
-    strbuf_t filePath;
-
-    printf("Thread:\n");
-
-    while(queues->dirQueue->activeThreads != 0){
-        if((dirName = dequeue(queues->dirQueue)) == NULL)
-            continue;
-        
-        printf("dirName: %s\n", dirName);
-        //open dir
-        DIR *dir;
-        struct dirent *dp;
-        dir = opendir(dirName);
-        
-        if((dir == NULL)){
-            perror("Cannot open");
-            exit(1);
-        }
-        else{
-            while((dp = readdir(dir)) != NULL){
-                if(dp->d_name[0] == '.'){
-                    continue;
-                }
-                sb_init(&filePath, 10);
-                printf("File in %s: '%s'\n", dirName, dp->d_name);
-                sb_concat(&filePath, dirName);
-                sb_append(&filePath, '/');
-                sb_concat(&filePath, dp->d_name);
-                
-                printf("File path: %s\n", filePath.data);
-                dirNum = isDir(filePath.data);
-                printf("dirNum: %d\n", dirNum);
-                
-                if(dirNum == 2){
-                    //Is valid directory
-                    printf("Inserting directory path into dirQueue: '%s'\n", filePath.data);
-                    enqueue(queues->dirQueue, filePath.data);
-                }
-                else if(dirNum == 3){
-
-                    bool validSuffix = true;
-                    int dpLength = strlen(dp->d_name);
-                    int suffixLength = strlen(queues->suffix);
-                    printf("dpLength and suffix length: %d, %d\n", dpLength, suffixLength);
-                    for(int i = 0; i < suffixLength; i++){
-                        if(queues->suffix[i] != dp->d_name[dpLength - suffixLength + i]){
-                            validSuffix = false;
-                            break;
-                        }
-                    }
-
-                    //Is valid file
-                    if(validSuffix){
-                        printf("Inserting file path into fileQueue: '%s'\n", filePath.data);
-                        enqueue(queues->fileQueue, filePath.data);
-                    }
-                }
-                sb_destroy(&filePath);
-            }
-        }
-    }
-    
-    printf("End thread\n");
-    return 0;
+bstLL* insertbstLL(bstLL* head, BST* tree){
+    //insert to the front of the LL
+    bstLL* insertBST = malloc(sizeof(bstLL));
+    insertBST->data = tree;
+    insertBST->next = head;
+    head = insertBST;
+    return head;
 }
 
 BST* readWords(char* name){
@@ -161,12 +101,90 @@ BST* readWords(char* name){
     return tree;
 }
 
-bstLL* insertbstLL(bstLL* head,BST* tree){
-    //insert to the front of the LL
-    bstLL* insertBST = malloc(sizeof(bstLL));
-    insertBST->data = tree;
-    insertBST->next = head;
-    head = insertBST;
+void* processFiles(void* q){
+    Queues_t* queues = (Queues_t*) q;
+    char* name;
+    //For every file, create the tree and insert into the bst list
+    while(queues->fileQueue->activeThreads != 0){
+        //printf("\n\nCreating BST for file.\n\n\n");
+        name = dequeue(queues->fileQueue);
+        if(name != NULL){
+            printf("\nCreating BST for file '%s'.\n", name);
+            queues->WFD = insertbstLL(queues->WFD, readWords(name));
+        }
+    }
+    
+    return 0;
+}
+
+void* processDirs(void* q){
+    Queues_t* queues = (Queues_t*) q;
+    int dirNum;
+    char* dirName;
+    strbuf_t filePath;
+
+    //printf("Thread:\n");
+
+    while(queues->dirQueue->activeThreads != 0){
+        if((dirName = dequeue(queues->dirQueue)) == NULL)
+            continue;
+        
+        //printf("dirName: %s\n", dirName);
+        //open dir
+        DIR *dir;
+        struct dirent *dp;
+        dir = opendir(dirName);
+        
+        if((dir == NULL)){
+            perror("Cannot open");
+            exit(1);
+        }
+        else{
+            while((dp = readdir(dir)) != NULL){
+                if(dp->d_name[0] == '.'){
+                    continue;
+                }
+                sb_init(&filePath, 10);
+                //printf("File in %s: '%s'\n", dirName, dp->d_name);
+                sb_concat(&filePath, dirName);
+                sb_append(&filePath, '/');
+                sb_concat(&filePath, dp->d_name);
+                
+                printf("File path: %s\n", filePath.data);
+                dirNum = isDir(filePath.data);
+                printf("dirNum: %d\n", dirNum);
+                
+                if(dirNum == 2){
+                    //Is valid directory
+                    printf("Inserting directory path into dirQueue: '%s'\n", filePath.data);
+                    enqueue(queues->dirQueue, filePath.data);
+                }
+                else if(dirNum == 3){
+
+                    bool validSuffix = true;
+                    int dpLength = strlen(dp->d_name);
+                    int suffixLength = strlen(queues->suffix);
+                    //printf("dpLength and suffix length: %d, %d\n", dpLength, suffixLength);
+                    for(int i = 0; i < suffixLength; i++){
+                        if(queues->suffix[i] != dp->d_name[dpLength - suffixLength + i]){
+                            validSuffix = false;
+                            break;
+                        }
+                    }
+
+                    //Is valid file
+                    if(validSuffix){
+                        printf("Inserting file path into fileQueue: '%s'\n", filePath.data);
+                        enqueue(queues->fileQueue, filePath.data);
+                    }
+                }
+                sb_destroy(&filePath);
+            }
+        }
+    }
+    
+    //printf("End thread\n");
+    return 0;
 }
 
 int main(int argc, char* argv[]){
@@ -178,10 +196,13 @@ int main(int argc, char* argv[]){
     Queues_t queues;
     queue_t dirQ;
     queue_t fileQ;
+    //bstLL* WFD;
+
     init(&dirQ);
     init(&fileQ);
     queues.dirQueue = &dirQ;
     queues.fileQueue = &fileQ;
+    //queues.WFD = WFD;
 
     for(int i = 1; argv[i] != NULL; i++){
         if(argv[i][0] == '-'){
@@ -223,11 +244,11 @@ int main(int argc, char* argv[]){
         }
     }
     
-    printf("Initial directory queue count: %d\n", dirQ.count);
-    printf("Initial file queue count: %d\n", fileQ.count);
+    //printf("Initial directory queue count: %d\n", dirQ.count);
+    //printf("Initial file queue count: %d\n", fileQ.count);
     setThreads(queues.dirQueue, directoryThreads);
     setThreads(queues.fileQueue, fileThreads);
-    
+
     if(!suffix){
         suffix = ".txt";
     }
@@ -240,33 +261,26 @@ int main(int argc, char* argv[]){
         pthread_create(&d_tids[i], NULL, processDirs, &queues);
     }
 
-    int* returnVal = 0;
     for(int i = 0; i < directoryThreads; i++){
         pthread_join(d_tids[i], NULL);
+        //printf("Return value of thread %ld: %d\n", d_tids[0], *returnVal);
+    }
+
+    for(int i = 0; i < fileThreads; i++){
+        pthread_create(&f_tids[i], NULL, processFiles, &queues);
+    }
+
+    for(int i = 0; i < fileThreads; i++){
+        pthread_join(f_tids[i], NULL);
         //printf("Return value of thread %ld: %d\n", d_tids[0], *returnVal);
     }
     printf("Post directory threads file queue count: %d\n", fileQ.count);
 
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
-    
-    char* fileName;
-    while((fileName = dequeue(&fileQ)) != NULL){
-        printf("File %d: %s\n", fileQ.count, fileName);
-    }
 
-    /*
-    BST* tree1 = readWords("text.txt");
-    BST* tree2 = readWords("text2.txt");
-    
-    printTree(tree1);
-    printf("\n");
-    printTree(tree2);
-    printf("\n");
-    //if(DEBUG) printf("\nNode count: %d\n", tree->totalCount);
+    //queues.WFD = insertbstLL(queues.WFD, readWords(dequeue(queues.fileQueue)));
 
-    printf("\n");
-    printf("JSD: %f\n", getJSD(tree1, tree2));
-    */
-    
+    printTree(queues.WFD->data);
+
 }
