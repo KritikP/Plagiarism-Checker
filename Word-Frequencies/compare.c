@@ -19,6 +19,11 @@
 #define DEBUG 1
 #endif
 
+typedef struct bstLL{
+    BST* data;
+    struct bstLL* next;
+}bstLL;
+
 typedef struct Queues_t{
     queue_t* dirQueue;
     queue_t* fileQueue;
@@ -153,6 +158,14 @@ BST* readWords(char* name){
     }
     
     return tree;
+}
+
+bstLL* insertbstLL(bstLL* head,BST* tree){
+    //insert to the front of the LL
+    bstLL* insertBST = malloc(sizeof(bstLL));
+    insertBST->data = tree;
+    insertBST->next = head;
+    head = insertBST;
 }
 
 int main(int argc, char* argv[]){
