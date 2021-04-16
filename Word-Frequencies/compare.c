@@ -108,7 +108,8 @@ BST* readWords(char* name){
     FILE* fp = fopen(name, "r");
 
     if(fp == NULL){
-        printf("File %s couldn't be opened for readWords.\n", name);
+        perror("readWords: File couldn't be opened: ");
+        write(2, name, strlen(name));
         fclose(fp);
         return NULL;
     }
@@ -171,7 +172,6 @@ void* processFiles(void* q){
             if(tempBST == NULL){
                 continue;
             }
-            printf("\nCreating BST for file '%s'.\n", name);
             queues->WFD = insertbstLL(queues->WFD, tempBST, name);
 
         }
@@ -255,7 +255,7 @@ void* processAnal(void* jsd){
 
     pthread_mutex_lock(&JSDL->lock);
     
-    printf("Curr anal, totalAnal, evenComps,: %d, %d, %d\n", JSDL->currentAnalThreads, JSDL->totalAnalThreads, JSDL->evenComparisons);
+    if(DEBUG)printf("Curr anal, totalAnal, evenComps,: %d, %d, %d\n", JSDL->currentAnalThreads, JSDL->totalAnalThreads, JSDL->evenComparisons);
     if(JSDL->currentAnalThreads != JSDL->totalAnalThreads - 1){
         startIndex = JSDL->currentAnalThreads * JSDL->evenComparisons;
         endIndex = startIndex + JSDL->evenComparisons;
@@ -269,10 +269,10 @@ void* processAnal(void* jsd){
     JSDL->currentAnalThreads++;
     pthread_mutex_unlock(&JSDL->lock);
 
-    printf("Start and end index: %d, %d\n", startIndex, endIndex);
+    if(DEBUG)printf("Start and end index: %d, %d\n", startIndex, endIndex);
     
     while(startIndex < endIndex){
-        printf("JSD comparison %d\n", startIndex);
+        if(DEBUG)printf("JSD comparison %d\n", startIndex);
         JSDL->JSDs[startIndex]->JSD = getJSD(JSDL->JSDs[startIndex]->file1->data, JSDL->JSDs[startIndex]->file2->data);
         startIndex++;
     }
@@ -283,14 +283,16 @@ void* processAnal(void* jsd){
 void* printLLBST(bstLL* head){
     bstLL* curr = head;
     if(curr == NULL){
-        printf("Empty LL trees.\n");
+        if(DEBUG)printf("Empty LL trees.\n");
         return 0;
     }
 
     while(curr != NULL){
-        printf("%s: ", curr->fileName);
-        printTree(curr->data);
-        printf("\n");
+        if(DEBUG){
+            printf("%s: ", curr->fileName);
+            printTree(curr->data);
+            printf("\n");
+        }
         curr = curr->next;
     }
 
@@ -318,12 +320,21 @@ void createJSDs(JSD_t** jsds, bstLL* head){
 }
 
 int cmpfunc(const void* a, const void* b){
-    JSD_t* jsd1 = (JSD_t*) a;
-    JSD_t* jsd2 = (JSD_t*) b;
-    printf("Count of comp %s, %s and comp %s, %s: %d, %d\n", jsd1->file1->fileName, jsd1->file2->fileName,
-    jsd2->file1->fileName, jsd2->file2->fileName, jsd1->totalWordCount, jsd1->totalWordCount);
-
-    return (jsd1->totalWordCount - jsd2->totalWordCount);
+    double l = (*(JSD_t**)a)->totalWordCount;
+    double r = (*(JSD_t**)b)->totalWordCount;
+    if(DEBUG){
+        printf("File set 1: %s, %s\t%d, %d\n", (*(JSD_t**)a)->file1->fileName, (*(JSD_t**)a)->file2->fileName
+            , (*(JSD_t**)a)->file1->data->totalCount, (*(JSD_t**)a)->file2->data->totalCount);
+        printf("File set 2: %s, %s\t%d, %d\n", (*(JSD_t**)b)->file1->fileName, (*(JSD_t**)b)->file2->fileName
+            , (*(JSD_t**)b)->file1->data->totalCount, (*(JSD_t**)b)->file2->data->totalCount);
+        printf("Count of a and b: %f, %f\n", l, r);
+    }
+    if(l - r > 0)
+        return -1;
+    else if(l - r < 0)
+        return 1;
+    else
+        return 0;
 }
 
 int main(int argc, char* argv[]){
@@ -438,14 +449,11 @@ int main(int argc, char* argv[]){
     for(int i = 0; i < ts; i++){
         pthread_join(a_tids[i], NULL);
     }
-    
+
     qsort(jsds, comparisons, sizeof(JSD_t*), cmpfunc);
 
     for(int i = 0; i < comparisons; i++){
         printf("%f %s %s\n", jsds[i]->JSD, jsds[i]->file1->fileName, jsds[i]->file2->fileName);
     }
-
-    //printf("%d\n", JSDL->totalComparisons);
-    //printf("%s\n", JSDL->JSDs[1]->file1->fileName);
 
 }
