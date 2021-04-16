@@ -76,81 +76,74 @@ bstLL* insertbstLL(bstLL* head, BST* tree){
 
 BST* readWords(char* name){
     BST* tree = newBST();
-
-    int r = 0;
-    printf("Printing name with while loop:\n");
-    while(name[r] != '\0'){
-        printf("%c", name[r]);
-        r++;
-    }
-    printf("\nDone: %d characters\n", r);
-    char* fileName = malloc(r);
-    r = 0;
-    while(name[r] != '\0'){
-        fileName[r] = name[r];
-        r++;
-    }
-
-    printf("File name: '%s'\n", fileName);
-
     FILE* fp = fopen(name, "r");
 
-    printf("Doing read words for file '%s'\n", name);
     if(fp == NULL){
         printf("File %s couldn't be opened for readWords.\n", name);
+        fclose(fp);
         return NULL;
     }
-    strbuf_t word;
-    sb_init(&word, 8);
+    strbuf_t* word = malloc(sizeof(strbuf_t));
+    sb_init(word, 8);
     char c;
     while(1){
         c = fgetc(fp);
         if(c == EOF){
-            if(word.used != 1){
-                char* temp = malloc(word.used);
-                strcpy(temp, word.data);
+            if(word->used != 1){
+                char* temp = malloc(word->used);
+                strcpy(temp, word->data);
                 tree->root = insert(tree->root, temp);
                 tree->totalCount++;
-                sb_destroy(&word);
+                sb_destroy(word);
             }
             else{
                 if(DEBUG) printf("Empty file %s\n", name);
+                free(word);
+                fclose(fp);
+                return NULL;
             }
             break;
         }
         else if(isalpha(c) == 0){
-            if(c == ' ' && word.used != 1){
-                char* temp = malloc(word.used);
-                strcpy(temp, word.data);
+            if(c == ' ' && word->used != 1){
+                char* temp = malloc(word->used);
+                strcpy(temp, word->data);
                 //printf("%s\n",temp );
                 tree->root = insert(tree->root, temp);
                 tree->totalCount++;
-                sb_destroy(&word);
-                sb_init(&word, 8);
+                sb_destroy(word);
+                sb_init(word, 8);
             }
         }
         else{
-            sb_append(&word, tolower(c));
+            sb_append(word, tolower(c));
         }
     }
     setFrequency(tree);
     if(tree->root == NULL){
         if(DEBUG) printf("Tree is empty\n");
     }
+    free(word);
+    fclose(fp);
     return tree;
 }
 
 void* processFiles(void* q){
     Queues_t* queues = (Queues_t*) q;
+    BST* tempBST;
     char* name;
     //For every file, create the tree and insert into the bst list
     while(queues->fileQueue->activeThreads != 0){
         //printf("\n\nCreating BST for file.\n\n\n");
         name = dequeue(queues->fileQueue);
         if(name != NULL){
+            //printf("\nCreating BST for file '%s'.\n", name);
+            tempBST = readWords(name);
+            if(tempBST == NULL){
+                continue;
+            }
             printf("\nCreating BST for file '%s'.\n", name);
-            queues->WFD = insertbstLL(queues->WFD, readWords(name));
-            //printTree(queues->WFD->data);
+            queues->WFD = insertbstLL(queues->WFD, tempBST);
 
         }
     }
@@ -217,7 +210,6 @@ void* processDirs(void* q){
                         enqueue(queues->fileQueue, filePath.data);
                     }
                 }
-                printf("About to destroy '%s' of length %ld and used %ld\n", filePath.data, filePath.length, filePath.used);
                 sb_destroy(&filePath);
             }
         }
@@ -225,6 +217,21 @@ void* processDirs(void* q){
     
     if(DEBUG)printf("End thread\n");
     return 0;
+}
+
+void* printLLBST(bstLL* head){
+    bstLL* curr = head;
+    if(curr == NULL){
+        printf("Empty LL trees.\n");
+        return 0;
+    }
+
+    while(curr != NULL){
+        printTree(curr->data);
+        printf("\n");
+        curr = curr->next;
+    }
+
 }
 
 int main(int argc, char* argv[]){
@@ -316,6 +323,6 @@ int main(int argc, char* argv[]){
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
 
-    printTree(queues.WFD->data);
+    printLLBST(queues.WFD);
 
 }
