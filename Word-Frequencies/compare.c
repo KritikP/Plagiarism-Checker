@@ -76,16 +76,23 @@ bstLL* insertbstLL(bstLL* head, BST* tree){
 
 BST* readWords(char* name){
     BST* tree = newBST();
-    
-    //printf("Length of name '%s': %ld\n\n", name, strlen(name));
-    /*
-    char* fileName = malloc(strlen(name));
-    strcpy(fileName, name);
-    printf("Length of copied name '%s': %ld\n\n", fileName, strlen(fileName));
-    */
-    printf("Doing read words for file '%s'\n", name);
 
-    //FILE *fp = fopen(name, "r");
+    int r = 0;
+    printf("Printing name with while loop:\n");
+    while(name[r] != '\0'){
+        printf("%c", name[r]);
+        r++;
+    }
+    printf("\nDone: %d characters\n", r);
+    char* fileName = malloc(r);
+    r = 0;
+    while(name[r] != '\0'){
+        fileName[r] = name[r];
+        r++;
+    }
+
+    printf("File name: '%s'\n", fileName);
+
     FILE* fp = fopen(name, "r");
 
     printf("Doing read words for file '%s'\n", name);

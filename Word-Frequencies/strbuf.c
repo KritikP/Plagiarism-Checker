@@ -94,6 +94,15 @@ int sb_remove(strbuf_t *L, char *item)
 
 int sb_concat(strbuf_t *sb, char *str)
 {
+    int i = 0;
+    while(str[i] != '\0'){
+        if(sb_append(sb, str[i])){
+            return 1;
+        }
+        i++;
+    }
+    return 0;
+    /*
     int strLength = 1;
     char c = str[0];
     while(c != '\0'){
@@ -120,6 +129,7 @@ int sb_concat(strbuf_t *sb, char *str)
     }
     sb->used = sb->used + strLength - 1;
     return 0;
+    */
 }
 
 void printList(strbuf_t *list)
