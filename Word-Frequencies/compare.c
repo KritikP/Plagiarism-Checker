@@ -21,8 +21,17 @@
 
 typedef struct bstLL{
     BST* data;
+    char* fileName;
     struct bstLL* next;
+    int fileCount;
 }bstLL;
+
+typedef struct JSD_t{
+    bstLL* file1;
+    bstLL* file2;
+    double JSD;
+    int totalWordCount;
+}JSD_t;
 
 typedef struct Queues_t{
     queue_t* dirQueue;
@@ -50,27 +59,27 @@ int isDir(char *name){
     return EXIT_FAILURE;
 }
 
-bstLL* insertbstLL(bstLL* head, BST* tree){
+bstLL* insertbstLL(bstLL* head, BST* tree, char* name){
     //insert to the front of the LL
     bstLL* newLLNode = malloc(sizeof(bstLL));
     newLLNode->data = tree;
     newLLNode->next = NULL;
+    newLLNode->fileName = name;
     
     if(head == NULL){
         head = newLLNode;
+        head->fileCount = 1;
         return head;
     }
 
     bstLL* curr = head;
-    //bstLL* prev = curr;
 
     while(curr->next != NULL){
-        //prev = curr;
         curr = curr->next;
     }
     
     curr->next = newLLNode;
-    
+    head->fileCount++;
     return head;
 }
 
@@ -143,7 +152,7 @@ void* processFiles(void* q){
                 continue;
             }
             printf("\nCreating BST for file '%s'.\n", name);
-            queues->WFD = insertbstLL(queues->WFD, tempBST);
+            queues->WFD = insertbstLL(queues->WFD, tempBST, name);
 
         }
     }
@@ -219,6 +228,12 @@ void* processDirs(void* q){
     return 0;
 }
 
+void* processAnal(void* jsd){
+    JSD_t** jsds = (JSD_t**) jsd;
+    int startIndex;
+    int endIndex;
+}
+
 void* printLLBST(bstLL* head){
     bstLL* curr = head;
     if(curr == NULL){
@@ -227,11 +242,33 @@ void* printLLBST(bstLL* head){
     }
 
     while(curr != NULL){
+        printf("%s: ", curr->fileName);
         printTree(curr->data);
         printf("\n");
         curr = curr->next;
     }
 
+}
+
+void createJSDs(JSD_t** jsds, bstLL* head){
+    bstLL* start = head;
+    bstLL* curr = head->next;
+    int i = 0;
+    
+    while(start != NULL){
+        while(curr != NULL){
+            printf("Make jsd at i: %d\n", i);
+            jsds[i] = malloc(sizeof(JSD_t));
+            jsds[i]->file1 = start;
+            jsds[i]->file2 = curr;
+            jsds[i]->totalWordCount = start->data->totalCount + curr->data->totalCount;
+            curr = curr->next;
+            i++;
+        }
+        start = start->next;
+        if(start != NULL)
+            curr = start->next;
+    }
 }
 
 int main(int argc, char* argv[]){
@@ -320,9 +357,16 @@ int main(int argc, char* argv[]){
         pthread_join(f_tids[i], NULL);
     }
 
-    printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n",
+    printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
-
+    
     printLLBST(queues.WFD);
 
+    int fileNums = queues.WFD->fileCount;
+    printf("Total file nums: %d\n", fileNums);
+    int comparisons = 0.5 * fileNums *(fileNums - 1);
+    JSD_t* jsds[comparisons];
+    
+    createJSDs(jsds, queues.WFD);
+    //printf("%s\n", jsds[0]->file1->fileName);
 }
