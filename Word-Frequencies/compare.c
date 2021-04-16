@@ -106,6 +106,9 @@ BST* readWords(char* name){
                 tree->totalCount++;
                 sb_destroy(&word);
             }
+            else{
+                if(DEBUG) printf("Empty file %s\n", name);
+            }
             break;
         }
         else if(isalpha(c) == 0){
@@ -175,7 +178,7 @@ void* processDirs(void* q){
                 if(dp->d_name[0] == '.'){
                     continue;
                 }
-                sb_init(&filePath, 10);
+                sb_init(&filePath, 100);
                 sb_concat(&filePath, dirName);
                 sb_append(&filePath, '/');
                 sb_concat(&filePath, dp->d_name);
