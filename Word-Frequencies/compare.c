@@ -33,6 +33,26 @@ typedef struct JSD_t{
     int totalWordCount;
 }JSD_t;
 
+typedef struct JSDList{
+    JSD_t** JSDs;
+    int totalAnalThreads;
+    int currentAnalThreads;
+    int totalComparisons;
+    int evenComparisons;
+    int extraComparisons;
+	pthread_mutex_t lock;
+}JSDList;
+
+void JSDListInit(JSDList* JSDL, int totalComps, int threadNums, JSD_t** jsds){
+    JSDL->JSDs = jsds;
+    JSDL->totalAnalThreads = threadNums;
+    JSDL->currentAnalThreads = 0;
+    JSDL->totalComparisons = totalComps;
+    JSDL->evenComparisons = totalComps / threadNums;
+    JSDL->extraComparisons = totalComps % threadNums;
+	pthread_mutex_init(&JSDL->lock, NULL);
+}
+
 typedef struct Queues_t{
     queue_t* dirQueue;
     queue_t* fileQueue;
@@ -229,9 +249,35 @@ void* processDirs(void* q){
 }
 
 void* processAnal(void* jsd){
-    JSD_t** jsds = (JSD_t**) jsd;
+    JSDList* JSDL = (JSDList*) jsd;
     int startIndex;
     int endIndex;
+
+    pthread_mutex_lock(&JSDL->lock);
+    
+    printf("Curr anal, totalAnal, evenComps,: %d, %d, %d\n", JSDL->currentAnalThreads, JSDL->totalAnalThreads, JSDL->evenComparisons);
+    if(JSDL->currentAnalThreads != JSDL->totalAnalThreads - 1){
+        startIndex = JSDL->currentAnalThreads * JSDL->evenComparisons;
+        endIndex = startIndex + JSDL->evenComparisons;
+    }
+    else{
+        startIndex = JSDL->currentAnalThreads * JSDL->evenComparisons;
+        endIndex = JSDL->currentAnalThreads * JSDL->evenComparisons +
+            JSDL->totalComparisons % JSDL->totalAnalThreads + JSDL->evenComparisons;
+        
+    }
+    JSDL->currentAnalThreads++;
+    pthread_mutex_unlock(&JSDL->lock);
+
+    printf("Start and end index: %d, %d\n", startIndex, endIndex);
+    
+    while(startIndex < endIndex){
+        printf("JSD comparison %d\n", startIndex);
+        JSDL->JSDs[startIndex]->JSD = getJSD(JSDL->JSDs[startIndex]->file1->data, JSDL->JSDs[startIndex]->file2->data);
+        startIndex++;
+    }
+
+    return 0;
 }
 
 void* printLLBST(bstLL* head){
@@ -257,7 +303,7 @@ void createJSDs(JSD_t** jsds, bstLL* head){
     
     while(start != NULL){
         while(curr != NULL){
-            printf("Make jsd at i: %d\n", i);
+            if(DEBUG)printf("Make jsd at i: %d\n", i);
             jsds[i] = malloc(sizeof(JSD_t));
             jsds[i]->file1 = start;
             jsds[i]->file2 = curr;
@@ -269,6 +315,15 @@ void createJSDs(JSD_t** jsds, bstLL* head){
         if(start != NULL)
             curr = start->next;
     }
+}
+
+int cmpfunc(const void* a, const void* b){
+    JSD_t* jsd1 = (JSD_t*) a;
+    JSD_t* jsd2 = (JSD_t*) b;
+    printf("Count of comp %s, %s and comp %s, %s: %d, %d\n", jsd1->file1->fileName, jsd1->file2->fileName,
+    jsd2->file1->fileName, jsd2->file2->fileName, jsd1->totalWordCount, jsd1->totalWordCount);
+
+    return (jsd1->totalWordCount - jsd2->totalWordCount);
 }
 
 int main(int argc, char* argv[]){
@@ -338,6 +393,7 @@ int main(int argc, char* argv[]){
     queues.suffix = suffix;
     pthread_t d_tids[directoryThreads];
     pthread_t f_tids[fileThreads];
+    pthread_t a_tids[analysisThreads];
     
     //Start the directory threads
     for(int i = 0; i < directoryThreads; i++){
@@ -366,7 +422,30 @@ int main(int argc, char* argv[]){
     printf("Total file nums: %d\n", fileNums);
     int comparisons = 0.5 * fileNums *(fileNums - 1);
     JSD_t* jsds[comparisons];
-    
     createJSDs(jsds, queues.WFD);
-    //printf("%s\n", jsds[0]->file1->fileName);
+
+    JSDList* JSDL = malloc(sizeof(JSDList));
+    JSDListInit(JSDL, comparisons, analysisThreads, jsds);
+
+    int ts = analysisThreads;
+    if(comparisons < analysisThreads)
+        ts = comparisons;
+    
+    for(int i = 0; i < ts; i++){
+        pthread_create(&a_tids[i], NULL, processAnal, JSDL);
+    }
+
+    for(int i = 0; i < ts; i++){
+        pthread_join(a_tids[i], NULL);
+    }
+    
+    qsort(jsds, comparisons, sizeof(JSD_t*), cmpfunc);
+
+    for(int i = 0; i < comparisons; i++){
+        printf("%f %s %s\n", jsds[i]->JSD, jsds[i]->file1->fileName, jsds[i]->file2->fileName);
+    }
+
+    //printf("%d\n", JSDL->totalComparisons);
+    //printf("%s\n", JSDL->JSDs[1]->file1->fileName);
+
 }
