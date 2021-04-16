@@ -134,7 +134,7 @@ BST* readWords(char* name){
             }
             break;
         }
-        else if(isalpha(c) == 0){
+        else if(isalpha(c) == 0 && c != '-'){
             if(c == ' ' && word->used != 1){
                 char* temp = malloc(word->used);
                 strcpy(temp, word->data);
