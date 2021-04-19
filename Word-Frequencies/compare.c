@@ -154,12 +154,11 @@ BST* readWords(char* name){
                 sb_destroy(word);
                 free(word);
                 fclose(fp);
-                return NULL;
             }
             break;
         }
-        else if(isalpha(c) == 0 && c != '-'){
-            if(c == ' ' && word->used != 1){
+        else if(isalpha(c) == 0 && c != '-' && isdigit(c) == 0){
+            if((isspace(c) != 0) && word->used != 1){
                 //printf("%s\n", temp);
                 tree->root = insert(tree->root, word->data);
                 tree->totalCount++;
@@ -268,6 +267,8 @@ void* processDirs(void* q){
                 sb_destroy(filePath);
             }
         }
+        free(dirName);
+        closedir(dir);
     }
     
     free(filePath);
@@ -487,10 +488,10 @@ int main(int argc, char* argv[]){
 
     for(int i = 0; i < comparisons; i++){
         printf("%f %s %s\n", jsds[i]->JSD, jsds[i]->file1->fileName, jsds[i]->file2->fileName);
-        printTree(jsds[i]->file1->data);
-        printf("\n");
-        printTree(jsds[i]->file2->data);
-        printf("\n");
+        //printTree(jsds[i]->file1->data);
+        //printf("\n");
+        //printTree(jsds[i]->file2->data);
+        //printf("\n");
         //printf("Total word in jsd: %d\n", jsds[i]->totalWordCount);
     }
 
