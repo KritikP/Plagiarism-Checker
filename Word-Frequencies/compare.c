@@ -43,6 +43,35 @@ typedef struct JSDList{
 	pthread_mutex_t lock;
 }JSDList;
 
+typedef struct Queues_t{
+    queue_t* dirQueue;
+    queue_t* fileQueue;
+    bstLL* WFD;
+    char* suffix;
+}Queues_t;
+
+void freeBSTLL(bstLL* root){
+    bstLL* curr = root;
+    bstLL* prev = curr;
+
+    while(curr != NULL){
+        curr = curr->next;
+        freeBST(prev->data);
+        free(prev->fileName);
+        free(prev);
+        prev = curr;
+    }
+
+}
+
+void freeJSDList(JSDList* j){
+    for(int i = 0; i < j->totalComparisons; i++){
+        free(j->JSDs[i]);
+    }
+    pthread_mutex_destroy(&(j->lock));
+    free(j);
+}
+
 void JSDListInit(JSDList* JSDL, int totalComps, int threadNums, JSD_t** jsds){
     JSDL->JSDs = jsds;
     JSDL->totalAnalThreads = threadNums;
@@ -52,13 +81,6 @@ void JSDListInit(JSDList* JSDL, int totalComps, int threadNums, JSD_t** jsds){
     JSDL->extraComparisons = totalComps % threadNums;
 	pthread_mutex_init(&JSDL->lock, NULL);
 }
-
-typedef struct Queues_t{
-    queue_t* dirQueue;
-    queue_t* fileQueue;
-    bstLL* WFD;
-    char* suffix;
-}Queues_t;
 
 int isDir(char *name){
     struct stat data;
@@ -122,12 +144,16 @@ BST* readWords(char* name){
             if(word->used != 1){
                 char* temp = malloc(word->used);
                 strcpy(temp, word->data);
+                //printf("%s\n", temp);
                 tree->root = insert(tree->root, temp);
                 tree->totalCount++;
                 sb_destroy(word);
+                free(word);
+                fclose(fp);
             }
             else{
                 if(DEBUG) printf("Empty file %s\n", name);
+                sb_destroy(word);
                 free(word);
                 fclose(fp);
                 return NULL;
@@ -138,7 +164,7 @@ BST* readWords(char* name){
             if(c == ' ' && word->used != 1){
                 char* temp = malloc(word->used);
                 strcpy(temp, word->data);
-                //printf("%s\n",temp );
+                //printf("%s\n", temp);
                 tree->root = insert(tree->root, temp);
                 tree->totalCount++;
                 sb_destroy(word);
@@ -149,12 +175,15 @@ BST* readWords(char* name){
             sb_append(word, tolower(c));
         }
     }
-    setFrequency(tree);
+    
     if(tree->root == NULL){
-        if(DEBUG) printf("Tree is empty\n");
+        if(DEBUG) printf("Tree is empty, so file was empty\n");
+        freeBST(tree);
+        return NULL;
     }
-    free(word);
-    fclose(fp);
+    else
+        setFrequency(tree);
+
     return tree;
 }
 
@@ -169,7 +198,7 @@ void* processFiles(void* q){
         if(name != NULL){
             //printf("\nCreating BST for file '%s'.\n", name);
             tempBST = readWords(name);
-            if(tempBST == NULL){
+            if(tempBST == NULL){        //If the tree is NULL, the file was empty and no words were added
                 continue;
             }
             queues->WFD = insertbstLL(queues->WFD, tempBST, name);
@@ -273,6 +302,7 @@ void* processAnal(void* jsd){
     
     while(startIndex < endIndex){
         if(DEBUG)printf("JSD comparison %d\n", startIndex);
+        JSDL->JSDs[startIndex]->JSD = 1;
         JSDL->JSDs[startIndex]->JSD = getJSD(JSDL->JSDs[startIndex]->file1->data, JSDL->JSDs[startIndex]->file2->data);
         startIndex++;
     }
@@ -455,5 +485,11 @@ int main(int argc, char* argv[]){
     for(int i = 0; i < comparisons; i++){
         printf("%f %s %s\n", jsds[i]->JSD, jsds[i]->file1->fileName, jsds[i]->file2->fileName);
     }
+
+    //free(suffix);
+    //freeJSDList(JSDL);
+    //freeBSTLL(queues.WFD);
+    //printTree(queues.WFD->next->next->data);
+    //freeBST(queues.WFD->next->next->data);
 
 }

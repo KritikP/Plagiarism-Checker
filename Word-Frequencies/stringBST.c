@@ -10,6 +10,11 @@ typedef struct node{
     struct node* rightChild;
 } node;
 
+typedef struct BST{
+    int totalCount;
+    struct node* root;
+} BST;
+
 node* newBSTNode(char* word){
     node* newNode;
     newNode = malloc(sizeof(node));
@@ -36,11 +41,6 @@ node* insert(node* root, char* word){
     return root;
 }
 
-typedef struct BST{
-    int totalCount;
-    struct node* root;
-} BST;
-
 BST* newBST(){
     BST* tree = malloc(sizeof(BST));
     tree->root = NULL;
@@ -61,7 +61,6 @@ void printTree(BST* tree){
 }
 
 void setFrequencyHelper(node* root, int total){
-    
     if(root != NULL){
         setFrequencyHelper(root->leftChild, total);
         root->frequency = root->count / (double) total;
@@ -87,6 +86,20 @@ node* findWordHelper(node* root, char* word){
 
 node* findWord(BST* tree, char* word){
     return findWordHelper(tree->root, word);
+}
+
+void freeBSTHelper(node* root){
+    if(root != NULL){
+        freeBSTHelper(root->rightChild);
+        freeBSTHelper(root->leftChild);
+        free(root->word);
+        free(root);
+    }
+}
+
+void freeBST(BST* tree){
+    freeBSTHelper(tree->root);
+    //free(tree);
 }
 
 void meanFrequencyTreeHelper(node* root1, node* root2, BST* tree){
@@ -137,5 +150,7 @@ double getKLD(BST* tree, BST* meanTree){
 
 double getJSD(BST* tree1, BST* tree2){
     BST* meanTree = meanFrequencyTree(tree1, tree2);
-    return sqrt(0.5 * getKLD(tree1, meanTree) + 0.5 * getKLD(tree2, meanTree));
+    double ans = sqrt(0.5 * getKLD(tree1, meanTree) + 0.5 * getKLD(tree2, meanTree));
+    //freeBST(meanTree);
+    return ans;
 }
