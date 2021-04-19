@@ -99,7 +99,7 @@ void freeBSTHelper(node* root){
 
 void freeBST(BST* tree){
     freeBSTHelper(tree->root);
-    //free(tree);
+    free(tree);
 }
 
 void meanFrequencyTreeHelper(node* root1, node* root2, BST* tree){
@@ -151,6 +151,6 @@ double getKLD(BST* tree, BST* meanTree){
 double getJSD(BST* tree1, BST* tree2){
     BST* meanTree = meanFrequencyTree(tree1, tree2);
     double ans = sqrt(0.5 * getKLD(tree1, meanTree) + 0.5 * getKLD(tree2, meanTree));
-    //freeBST(meanTree);
+    freeBST(meanTree);
     return ans;
 }

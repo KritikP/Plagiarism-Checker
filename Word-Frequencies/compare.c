@@ -131,7 +131,7 @@ BST* readWords(char* name){
 
     if(fp == NULL){
         perror("readWords: File couldn't be opened: ");
-        write(2, name, strlen(name));
+        //write(2, name, strlen(name));
         fclose(fp);
         return NULL;
     }
@@ -213,12 +213,12 @@ void* processDirs(void* q){
     Queues_t* queues = (Queues_t*) q;
     int dirNum;
     char* dirName;
-    strbuf_t filePath;
-
+    strbuf_t* filePath = malloc(sizeof(strbuf_t));
     if(DEBUG)printf("Thread:\n");
 
     while(queues->dirQueue->activeThreads != 0){
-        if((dirName = dequeue(queues->dirQueue)) == NULL)
+        dirName = dequeue(queues->dirQueue);
+        if(dirName == NULL)
             continue;
         
         //printf("dirName: %s\n", dirName);
@@ -228,6 +228,7 @@ void* processDirs(void* q){
         dir = opendir(dirName);
         
         if((dir == NULL)){
+            printf("Cannot open dir\n");
             perror("Cannot open dir\n");
             exit(1);
         }
@@ -236,19 +237,19 @@ void* processDirs(void* q){
                 if(dp->d_name[0] == '.'){
                     continue;
                 }
-                sb_init(&filePath, 100);
-                sb_concat(&filePath, dirName);
-                sb_append(&filePath, '/');
-                sb_concat(&filePath, dp->d_name);
+                sb_init(filePath, 100);
+                sb_concat(filePath, dirName);
+                sb_append(filePath, '/');
+                sb_concat(filePath, dp->d_name);
                 
                 //printf("File path: %s\n", filePath.data);
-                dirNum = isDir(filePath.data);
+                dirNum = isDir(filePath->data);
                 //printf("dirNum: %d\n", dirNum);
                 
                 if(dirNum == 2){
                     //Is valid directory
-                    if(DEBUG)printf("Inserting directory path into dirQueue: '%s'\n", filePath.data);
-                    enqueue(queues->dirQueue, filePath.data);
+                    if(DEBUG)printf("Inserting directory path into dirQueue: '%s'\n", filePath->data);
+                    enqueue(queues->dirQueue, filePath->data);
                 }
                 else if(dirNum == 3){
 
@@ -264,15 +265,16 @@ void* processDirs(void* q){
 
                     //Is valid file
                     if(validSuffix){
-                        if(DEBUG)printf("Inserting file path into fileQueue: '%s'\n", filePath.data);
-                        enqueue(queues->fileQueue, filePath.data);
+                        if(DEBUG)printf("Inserting file path into fileQueue: '%s'\n", filePath->data);
+                        enqueue(queues->fileQueue, filePath->data);
                     }
                 }
-                sb_destroy(&filePath);
+                sb_destroy(filePath);
             }
         }
     }
     
+    free(filePath);
     if(DEBUG)printf("End thread\n");
     return 0;
 }
@@ -301,7 +303,7 @@ void* processAnal(void* jsd){
     if(DEBUG)printf("Start and end index: %d, %d\n", startIndex, endIndex);
     
     while(startIndex < endIndex){
-        if(DEBUG)printf("JSD comparison %d\n", startIndex);
+        if(DEBUG) printf("JSD comparison %d\n", startIndex);
         JSDL->JSDs[startIndex]->JSD = 1;
         JSDL->JSDs[startIndex]->JSD = getJSD(JSDL->JSDs[startIndex]->file1->data, JSDL->JSDs[startIndex]->file2->data);
         startIndex++;
@@ -373,19 +375,19 @@ int main(int argc, char* argv[]){
     int fileThreads = 1;
     int analysisThreads = 1;
     char* suffix = NULL;
-    Queues_t queues;
-    queue_t dirQ;
-    queue_t fileQ;
-    queues.WFD = NULL;
+    Queues_t* queues = malloc(sizeof(Queues_t));
+    queue_t* dirQ = malloc(sizeof(queue_t));
+    queue_t* fileQ = malloc(sizeof(queue_t));
+    queues->WFD = NULL;
 
-    init(&dirQ);
-    init(&fileQ);
-    queues.dirQueue = &dirQ;
-    queues.fileQueue = &fileQ;
+    init(dirQ);
+    init(fileQ);
+    queues->dirQueue = dirQ;
+    queues->fileQueue = fileQ;
 
     for(int i = 1; argv[i] != NULL; i++){
         if(argv[i][0] == '-'){
-            char* temp = malloc(strlen(argv[i]) - 1 * sizeof(char));
+            char* temp = malloc((strlen(argv[i]) - 1) * sizeof(char));
             for(int j = 2; j < strlen(argv[i]); j++){
                 temp[j - 2] = argv[i][j];
             }
@@ -407,47 +409,48 @@ int main(int argc, char* argv[]){
             free(temp);
             
         }
+        
         else{
             dirNum = isDir(argv[i]);
             if(dirNum == 2){
                 //Is directory
-                enqueue(queues.dirQueue, argv[i]);
+                enqueue(queues->dirQueue, argv[i]);
             }
             else if(dirNum == 3){
                 if(argv[i][0] == '.')
                     break;
                 
                 //Is valid file
-                enqueue(queues.fileQueue, argv[i]);
+                enqueue(queues->fileQueue, argv[i]);
             }
         }
     }
     
-    if(DEBUG) printf("Initial directory queue count: %d\n", dirQ.count);
-    if(DEBUG) printf("Initial file queue count: %d\n", fileQ.count);
-    setThreads(queues.dirQueue, directoryThreads);
-    setThreads(queues.fileQueue, fileThreads);
+    if(DEBUG) printf("Initial directory queue count: %d\n", dirQ->count);
+    if(DEBUG) printf("Initial file queue count: %d\n", fileQ->count);
+    setThreads(queues->dirQueue, directoryThreads);
+    setThreads(queues->fileQueue, fileThreads);
 
     if(!suffix){
         suffix = ".txt";
     }
-    queues.suffix = suffix;
+    queues->suffix = suffix;
     pthread_t d_tids[directoryThreads];
     pthread_t f_tids[fileThreads];
     pthread_t a_tids[analysisThreads];
     
     //Start the directory threads
     for(int i = 0; i < directoryThreads; i++){
-        pthread_create(&d_tids[i], NULL, processDirs, &queues);
+        pthread_create(&d_tids[i], NULL, processDirs, queues);
     }
 
     for(int i = 0; i < directoryThreads; i++){
         pthread_join(d_tids[i], NULL);
     }
 
-    if(DEBUG)printf("Post directory threads file queue count: %d\n", fileQ.count);
+    if(DEBUG)printf("Post directory threads file queue count: %d\n", fileQ->count);
     for(int i = 0; i < fileThreads; i++){
-        pthread_create(&f_tids[i], NULL, processFiles, &queues);
+        pthread_create(&f_tids[i], NULL, processFiles, queues);
     }
 
     for(int i = 0; i < fileThreads; i++){
@@ -457,13 +460,17 @@ int main(int argc, char* argv[]){
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
     
-    printLLBST(queues.WFD);
+    if(queues->WFD == NULL){
+        printf("No files\n");
+        return 1;
+    }
 
-    int fileNums = queues.WFD->fileCount;
+    printLLBST(queues->WFD);
+    int fileNums = queues->WFD->fileCount;
     printf("Total file nums: %d\n", fileNums);
     int comparisons = 0.5 * fileNums *(fileNums - 1);
     JSD_t* jsds[comparisons];
-    createJSDs(jsds, queues.WFD);
+    createJSDs(jsds, queues->WFD);
 
     JSDList* JSDL = malloc(sizeof(JSDList));
     JSDListInit(JSDL, comparisons, analysisThreads, jsds);
@@ -487,9 +494,15 @@ int main(int argc, char* argv[]){
     }
 
     //free(suffix);
-    //freeJSDList(JSDL);
-    //freeBSTLL(queues.WFD);
+    freeJSDList(JSDL);
+    freeBSTLL(queues->WFD);
+    free(queues);
+    destroy(dirQ);
+    destroy(fileQ);
+    free(dirQ);
+    free(fileQ);
+
     //printTree(queues.WFD->next->next->data);
     //freeBST(queues.WFD->next->next->data);
-
+    
 }
