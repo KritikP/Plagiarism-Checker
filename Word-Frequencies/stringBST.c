@@ -18,7 +18,9 @@ typedef struct BST{
 node* newBSTNode(char* word){
     node* newNode;
     newNode = malloc(sizeof(node));
-    newNode->word = word;
+    char* temp = malloc(strlen(word) + 1);
+    strcpy(temp, word);
+    newNode->word = temp;
     newNode->count = 1;
     newNode->frequency = 0;
     newNode->leftChild = NULL;

@@ -142,10 +142,8 @@ BST* readWords(char* name){
         c = fgetc(fp);
         if(c == EOF){
             if(word->used != 1){
-                char* temp = malloc(word->used);
-                strcpy(temp, word->data);
                 //printf("%s\n", temp);
-                tree->root = insert(tree->root, temp);
+                tree->root = insert(tree->root, word->data);
                 tree->totalCount++;
                 sb_destroy(word);
                 free(word);
@@ -165,7 +163,7 @@ BST* readWords(char* name){
                 char* temp = malloc(word->used);
                 strcpy(temp, word->data);
                 //printf("%s\n", temp);
-                tree->root = insert(tree->root, temp);
+                tree->root = insert(tree->root, word->data);
                 tree->totalCount++;
                 sb_destroy(word);
                 sb_init(word, 8);
