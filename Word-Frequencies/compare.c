@@ -15,8 +15,8 @@
 #include "strbuf.c"
 #include "queue.c"
 
-#ifndef DEBUG
-#define DEBUG 1
+#ifdef DEBUG
+#define DEBUG 0
 #endif
 
 typedef struct bstLL{
@@ -150,7 +150,6 @@ BST* readWords(char* name){
                 fclose(fp);
             }
             else{
-                if(DEBUG) printf("Empty file %s\n", name);
                 sb_destroy(word);
                 free(word);
                 fclose(fp);
@@ -172,7 +171,6 @@ BST* readWords(char* name){
     }
     
     if(tree->root == NULL){
-        if(DEBUG) printf("Tree is empty, so file was empty\n");
         freeBST(tree);
         return NULL;
     }
@@ -209,7 +207,6 @@ void* processDirs(void* q){
     int dirNum;
     char* dirName;
     strbuf_t* filePath = malloc(sizeof(strbuf_t));
-    if(DEBUG)printf("Thread:\n");
 
     while(queues->dirQueue->activeThreads != 0){
         dirName = dequeue(queues->dirQueue);
@@ -223,7 +220,6 @@ void* processDirs(void* q){
         dir = opendir(dirName);
         
         if((dir == NULL)){
-            printf("Cannot open dir\n");
             perror("Cannot open dir\n");
             exit(1);
         }
@@ -272,7 +268,6 @@ void* processDirs(void* q){
     }
     
     free(filePath);
-    if(DEBUG)printf("End thread\n");
     return 0;
 }
 
@@ -283,7 +278,7 @@ void* processAnal(void* jsd){
 
     pthread_mutex_lock(&JSDL->lock);
     
-    if(DEBUG)printf("Curr anal, totalAnal, evenComps,: %d, %d, %d\n", JSDL->currentAnalThreads, JSDL->totalAnalThreads, JSDL->evenComparisons);
+    //if(DEBUG)printf("Curr anal, totalAnal, evenComps,: %d, %d, %d\n", JSDL->currentAnalThreads, JSDL->totalAnalThreads, JSDL->evenComparisons);
     if(JSDL->currentAnalThreads != JSDL->totalAnalThreads - 1){
         startIndex = JSDL->currentAnalThreads * JSDL->evenComparisons;
         endIndex = startIndex + JSDL->evenComparisons;
@@ -296,8 +291,6 @@ void* processAnal(void* jsd){
     }
     JSDL->currentAnalThreads++;
     pthread_mutex_unlock(&JSDL->lock);
-
-    if(DEBUG)printf("Start and end index: %d, %d\n", startIndex, endIndex);
     
     while(startIndex < endIndex){
         if(DEBUG) printf("JSD comparison %d\n", startIndex);
@@ -311,10 +304,8 @@ void* processAnal(void* jsd){
 
 void* printLLBST(bstLL* head){
     bstLL* curr = head;
-    if(curr == NULL){
-        if(DEBUG)printf("Empty LL trees.\n");
+    if(curr == NULL)
         return 0;
-    }
 
     while(curr != NULL){
         if(DEBUG){
@@ -334,7 +325,6 @@ void createJSDs(JSD_t** jsds, bstLL* head){
     
     while(start != NULL){
         while(curr != NULL){
-            if(DEBUG)printf("Make jsd at i: %d\n", i);
             jsds[i] = malloc(sizeof(JSD_t));
             jsds[i]->file1 = start;
             jsds[i]->file2 = curr;
@@ -430,8 +420,6 @@ int main(int argc, char* argv[]){
         }
     }
     
-    if(DEBUG) printf("Initial directory queue count: %d\n", dirQ->count);
-    if(DEBUG) printf("Initial file queue count: %d\n", fileQ->count);
     setThreads(queues->dirQueue, directoryThreads);
     setThreads(queues->fileQueue, fileThreads);
 
@@ -449,7 +437,6 @@ int main(int argc, char* argv[]){
         pthread_join(d_tids[i], NULL);
     }
 
-    if(DEBUG)printf("Post directory threads file queue count: %d\n", fileQ->count);
     for(int i = 0; i < fileThreads; i++){
         pthread_create(&f_tids[i], NULL, processFiles, queues);
     }
@@ -458,7 +445,7 @@ int main(int argc, char* argv[]){
         pthread_join(f_tids[i], NULL);
     }
 
-    printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n\n",
+    if(DEBUG)printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
 
     if(queues->WFD == NULL){
@@ -488,7 +475,7 @@ int main(int argc, char* argv[]){
     }
 
     printLLBST(queues->WFD);
-    printf("Total file nums: %d\n", fileNums);
+    //printf("Total file nums: %d\n", fileNums);
     int comparisons = 0.5 * fileNums *(fileNums - 1);
     JSD_t* jsds[comparisons];
     createJSDs(jsds, queues->WFD);
