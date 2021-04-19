@@ -367,11 +367,17 @@ int cmpfunc(const void* a, const void* b){
 }
 
 int main(int argc, char* argv[]){
+
+    if(argc == 1){
+        return EXIT_FAILURE;
+    }
+
     int dirNum;
     int directoryThreads = 1;
     int fileThreads = 1;
     int analysisThreads = 1;
-    char* suffix = NULL;
+    char* suffix = ".txt";
+    bool freeSuf = false;
     Queues_t* queues = malloc(sizeof(Queues_t));
     queue_t* dirQ = malloc(sizeof(queue_t));
     queue_t* fileQ = malloc(sizeof(queue_t));
@@ -384,11 +390,11 @@ int main(int argc, char* argv[]){
 
     for(int i = 1; argv[i] != NULL; i++){
         if(argv[i][0] == '-'){
-            char* temp = malloc((strlen(argv[i]) - 1) * sizeof(char));
+            char* temp = calloc((strlen(argv[i]) - 1), sizeof(char));
             for(int j = 2; j < strlen(argv[i]); j++){
                 temp[j - 2] = argv[i][j];
             }
-            switch((argv[i][1])){
+            switch(tolower((argv[i][1]))){
                 case ('d') :
                     directoryThreads = atoi(temp);
                     break;
@@ -400,6 +406,7 @@ int main(int argc, char* argv[]){
                     break;
                 case('s') :
                     suffix = malloc(strlen(temp) * sizeof(char));
+                    freeSuf = true;
                     strcpy(suffix, temp);
                     break;
             }
@@ -428,9 +435,6 @@ int main(int argc, char* argv[]){
     setThreads(queues->dirQueue, directoryThreads);
     setThreads(queues->fileQueue, fileThreads);
 
-    if(!suffix){
-        suffix = ".txt";
-    }
     queues->suffix = suffix;
     pthread_t d_tids[directoryThreads];
     pthread_t f_tids[fileThreads];
@@ -456,14 +460,34 @@ int main(int argc, char* argv[]){
 
     printf("Directory threads: %d\nFile threads: %d\nAnalysis threads: %d\nFile name suffix: %s\n\n",
     directoryThreads, fileThreads, analysisThreads, suffix);
-    
+
     if(queues->WFD == NULL){
-        printf("No files\n");
-        return 1;
+        write(2, "No files\n", 9);
+        if(freeSuf)
+            free(suffix);
+        free(queues);
+        destroy(dirQ);
+        destroy(fileQ);
+        free(dirQ);
+        free(fileQ);
+        return EXIT_FAILURE;
+    }
+    int fileNums = queues->WFD->fileCount;
+    if(fileNums < 2){
+        write(2, "Less than 2 files\n", 18);
+        if(freeSuf)
+            free(suffix);
+        freeBSTLL(queues->WFD);
+        free(queues);
+        destroy(dirQ);
+        destroy(fileQ);
+        free(dirQ);
+        free(fileQ);
+
+        return EXIT_FAILURE;
     }
 
     printLLBST(queues->WFD);
-    int fileNums = queues->WFD->fileCount;
     printf("Total file nums: %d\n", fileNums);
     int comparisons = 0.5 * fileNums *(fileNums - 1);
     JSD_t* jsds[comparisons];
@@ -495,7 +519,8 @@ int main(int argc, char* argv[]){
         //printf("Total word in jsd: %d\n", jsds[i]->totalWordCount);
     }
 
-    //free(suffix);
+    if(freeSuf)
+        free(suffix);
     freeJSDList(JSDL);
     freeBSTLL(queues->WFD);
     free(queues);
@@ -503,8 +528,5 @@ int main(int argc, char* argv[]){
     destroy(fileQ);
     free(dirQ);
     free(fileQ);
-
-    //printTree(queues.WFD->next->next->data);
-    //freeBST(queues.WFD->next->next->data);
     
 }

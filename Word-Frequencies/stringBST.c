@@ -53,7 +53,7 @@ BST* newBST(){
 void printTreeHelper(node* root){
     if(root != NULL){
         printTreeHelper(root->leftChild);
-        printf("%s->%f\t", root->word, root->frequency);
+        printf("%s (%f)\t", root->word, root->frequency);
         printTreeHelper(root->rightChild);
     }
 }
