@@ -118,6 +118,7 @@ char* dequeue(queue_t *Q)
 		Q->rear = NULL;
 	}
 
+	free(temp->key);
 	free(temp);
 	--Q->count;
 
