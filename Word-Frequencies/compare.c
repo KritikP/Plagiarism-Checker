@@ -160,8 +160,6 @@ BST* readWords(char* name){
         }
         else if(isalpha(c) == 0 && c != '-'){
             if(c == ' ' && word->used != 1){
-                char* temp = malloc(word->used);
-                strcpy(temp, word->data);
                 //printf("%s\n", temp);
                 tree->root = insert(tree->root, word->data);
                 tree->totalCount++;
@@ -489,6 +487,11 @@ int main(int argc, char* argv[]){
 
     for(int i = 0; i < comparisons; i++){
         printf("%f %s %s\n", jsds[i]->JSD, jsds[i]->file1->fileName, jsds[i]->file2->fileName);
+        printTree(jsds[i]->file1->data);
+        printf("\n");
+        printTree(jsds[i]->file2->data);
+        printf("\n");
+        //printf("Total word in jsd: %d\n", jsds[i]->totalWordCount);
     }
 
     //free(suffix);

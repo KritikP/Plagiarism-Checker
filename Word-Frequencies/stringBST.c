@@ -65,7 +65,7 @@ void printTree(BST* tree){
 void setFrequencyHelper(node* root, int total){
     if(root != NULL){
         setFrequencyHelper(root->leftChild, total);
-        root->frequency = root->count / (double) total;
+        root->frequency = (double) root->count / (double) total;
         setFrequencyHelper(root->rightChild, total);
     }
     
@@ -138,7 +138,7 @@ BST* meanFrequencyTree(BST* tree1, BST* tree2){
 double KLDHelper(node* root, BST* meanTree){
     
     if(root != NULL){
-        return root->frequency * log2f(root->frequency / findWord(meanTree, root->word)->frequency)
+        return root->frequency * log2(root->frequency / findWord(meanTree, root->word)->frequency)
         + KLDHelper(root->leftChild, meanTree) + KLDHelper(root->rightChild, meanTree);
     }
     else{
@@ -152,7 +152,7 @@ double getKLD(BST* tree, BST* meanTree){
 
 double getJSD(BST* tree1, BST* tree2){
     BST* meanTree = meanFrequencyTree(tree1, tree2);
-    double ans = sqrt(0.5 * getKLD(tree1, meanTree) + 0.5 * getKLD(tree2, meanTree));
+    double ans = sqrt(0.5f * getKLD(tree1, meanTree) + 0.5f * getKLD(tree2, meanTree));
     freeBST(meanTree);
     return ans;
 }
