@@ -24,7 +24,7 @@ typedef struct queue_t{
 
 QNode* newNode(char* k){
     QNode* temp = malloc(sizeof(QNode));
-	temp->key = malloc(strlen(k));
+	temp->key = malloc(strlen(k) + 1);
 	strcpy(temp->key, k);
     temp->next = NULL;
     return temp;
@@ -110,7 +110,7 @@ char* dequeue(queue_t *Q)
     QNode* temp = Q->front;
 	
 	char* tempData;
-	tempData = malloc(sizeof(strlen(temp->key)));
+	tempData = malloc(strlen(temp->key) + 1);
 	strcpy(tempData, temp->key);
 	Q->front = Q->front->next;
 	
