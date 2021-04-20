@@ -515,5 +515,5 @@ int main(int argc, char* argv[]){
     destroy(fileQ);
     free(dirQ);
     free(fileQ);
-    
+    return EXIT_SUCCESS;
 }
