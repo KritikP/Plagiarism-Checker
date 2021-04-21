@@ -78,6 +78,8 @@ void JSDListInit(JSDList* JSDL, int totalComps, int threadNums, JSD_t** jsds){
     JSDL->currentAnalThreads = 0;
     JSDL->totalComparisons = totalComps;
     JSDL->evenComparisons = totalComps / threadNums;
+    if(JSDL->evenComparisons == 0)
+        JSDL->evenComparisons = 1;
     JSDL->extraComparisons = totalComps % threadNums;
 	pthread_mutex_init(&JSDL->lock, NULL);
 }
@@ -413,9 +415,18 @@ int main(int argc, char* argv[]){
             else if(dirNum == 3){
                 if(argv[i][0] == '.')
                     break;
-                
+                bool validSuffix = true;
+                int dpLength = strlen(argv[i]);
+                int suffixLength = strlen(suffix);
+                for(int j = 0; j < suffixLength; j++){
+                    if(suffix[j] != argv[i][dpLength - suffixLength + j]){
+                        validSuffix = false;
+                        break;
+                    }
+                }
                 //Is valid file
-                enqueue(queues->fileQueue, argv[i]);
+                if(validSuffix)
+                    enqueue(queues->fileQueue, argv[i]);
             }
         }
     }
@@ -482,7 +493,6 @@ int main(int argc, char* argv[]){
 
     JSDList* JSDL = malloc(sizeof(JSDList));
     JSDListInit(JSDL, comparisons, analysisThreads, jsds);
-
     int ts = analysisThreads;
     if(comparisons < analysisThreads)
         ts = comparisons;
